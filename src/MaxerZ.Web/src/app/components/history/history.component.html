@@ -1,0 +1,79 @@
+<div class="history-container">
+  <header class="history-header">
+    <h1 class="page-title">Generation Logs & History</h1>
+    <p class="page-desc">Review previously generated cover letters, re-export PDF documents, or reload content drafts into the active editor.</p>
+  </header>
+
+  @if (isLoading()) {
+    <div class="loader-container">
+      <div class="spinner"></div>
+      <span>Retrieving logs from database...</span>
+    </div>
+  } @else if (errorMessage()) {
+    <div class="error-alert">
+      {{ errorMessage() }}
+    </div>
+  } @else if (records().length === 0) {
+    <div class="card empty-state">
+      <svg class="empty-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+      </svg>
+      <h2>No Letters Generated Yet</h2>
+      <p>Your SQLite generation log database is currently empty. Get started by composing your first cover letter draft.</p>
+      <button class="btn-primary" routerLink="/compose">Compose Cover Letter</button>
+    </div>
+  } @else {
+    <div class="card table-card">
+      <div class="table-responsive">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>Date & Time</th>
+              <th>Company</th>
+              <th>Position</th>
+              <th>Language</th>
+              <th>AI Provider / Engine</th>
+              <th>MCP Sync</th>
+              <th class="actions-col">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (rec of records(); track rec.id) {
+              <tr>
+                <td class="date-cell">{{ formatDate(rec.createdAt) }}</td>
+                <td class="company-cell">{{ rec.companyName }}</td>
+                <td class="position-cell">{{ rec.position }}</td>
+                <td>
+                  <span class="lang-tag" [class.de]="rec.language === 'de'">
+                    {{ rec.language.toUpperCase() }}
+                  </span>
+                </td>
+                <td class="provider-cell">
+                  <span class="provider-badge" [class.fallback]="rec.usedProvider === 'RawFallback'">
+                    {{ rec.usedProvider }}
+                  </span>
+                  <span class="model-text">{{ rec.usedModel }}</span>
+                </td>
+                <td>
+                  @if (rec.syncedToMcp) {
+                    <span class="sync-status synced" title="Synchronized to MCP indexer">✓ Synced</span>
+                  } @else {
+                    <span class="sync-status pending" title="Local only, sync disabled">Local</span>
+                  }
+                </td>
+                <td class="actions-cell">
+                  <button class="btn-action" (click)="loadRecord(rec)" title="Load and Edit Draft">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="action-icon">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                    </svg>
+                    <span>Load & Edit</span>
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</div>
