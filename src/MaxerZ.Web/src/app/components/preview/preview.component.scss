@@ -1,0 +1,242 @@
+@import '../../../styles/variables';
+
+.preview-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 30px;
+  overflow: hidden;
+}
+
+.preview-header {
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .back-link {
+    background: none;
+    border: 1px solid var(--border);
+    padding: 8px;
+    border-radius: 50%;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition);
+
+    &:hover {
+      background-color: var(--bg-elevated);
+      color: var(--text-primary);
+      border-color: var(--border-light);
+    }
+
+    .icon {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  .page-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .page-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+}
+
+.warning-banner {
+  background-color: rgba(245, 166, 35, 0.1);
+  color: var(--accent-amber);
+  border: 1px solid rgba(245, 166, 35, 0.2);
+  padding: 10px 16px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-shrink: 0;
+
+  .warn-icon {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+}
+
+.preview-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: stretch;
+  flex: 1;
+  overflow: hidden;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+    overflow-y: auto;
+  }
+}
+
+.editor-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  height: 100%;
+  overflow-y: auto;
+
+  .card-title {
+    font-size: 15px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+  }
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+
+  &.flex-fill {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 200px;
+  }
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+  
+  .form-group {
+    flex: 1;
+  }
+}
+
+.editor-textarea {
+  flex: 1;
+  min-height: 150px;
+  font-family: var(--font);
+  line-height: 1.5;
+  font-size: 13.5px;
+}
+
+.metadata-footer {
+  display: flex;
+  justify-content: space-between;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  font-size: 12px;
+  margin-top: 6px;
+
+  .meta-item {
+    display: flex;
+    gap: 6px;
+  }
+
+  .meta-label {
+    color: var(--text-secondary);
+  }
+
+  .meta-value {
+    color: var(--text-primary);
+    font-weight: 600;
+
+    &.synced {
+      color: var(--accent-green);
+    }
+  }
+}
+
+.editor-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 6px;
+
+  button {
+    flex: 1;
+  }
+
+  .btn-icon {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.action-alert {
+  font-size: 12.5px;
+  font-weight: 500;
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  margin-top: 6px;
+
+  &.success {
+    background-color: rgba(61, 214, 181, 0.1);
+    color: var(--accent-green);
+    border: 1px solid rgba(61, 214, 181, 0.2);
+  }
+
+  &.error {
+    background-color: rgba(255, 92, 92, 0.1);
+    color: var(--accent-red);
+    border: 1px solid rgba(255, 92, 92, 0.2);
+  }
+}
+
+/* PDF Preview Panel */
+.pdf-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  padding: 24px;
+}
+
+.pdf-viewer-container {
+  flex: 1;
+  background-color: #0c0e14;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  position: relative;
+}
+
+.pdf-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background-color: #ffffff;
+}
+
+.pdf-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 12px;
+  color: var(--text-secondary);
+  font-size: 13px;
+
+  .pdf-icon {
+    width: 36px;
+    height: 36px;
+    color: var(--text-muted);
+  }
+}
