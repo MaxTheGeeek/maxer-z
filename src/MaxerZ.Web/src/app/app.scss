@@ -1,0 +1,218 @@
+@import '../styles/variables';
+
+.app-container {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--bg-primary);
+
+  &.sidebar-collapsed {
+    .sidebar {
+      width: var(--sidebar-collapsed);
+    }
+    .brand-title {
+      opacity: 0;
+      visibility: hidden;
+      transform: translateX(-10px);
+    }
+    .menu-text {
+      opacity: 0;
+      visibility: hidden;
+      transform: translateX(-10px);
+    }
+    .user-details {
+      opacity: 0;
+      visibility: hidden;
+      transform: translateX(-10px);
+    }
+    .sidebar-footer {
+      padding: 12px 6px;
+      justify-content: center;
+    }
+  }
+}
+
+.sidebar {
+  width: var(--sidebar-width);
+  background-color: var(--bg-secondary);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  transition: width var(--transition);
+  position: relative;
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+.sidebar-header {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+  overflow: hidden;
+
+  .toggle-btn {
+    background: none;
+    border: none;
+    padding: 6px;
+    border-radius: var(--radius);
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition);
+
+    &:hover {
+      background-color: var(--bg-elevated);
+      color: var(--text-primary);
+    }
+
+    .icon {
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  .brand-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+    transition: opacity var(--transition), visibility var(--transition), transform var(--transition);
+    white-space: nowrap;
+  }
+}
+
+.sidebar-menu {
+  flex: 1;
+  padding: 16px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  /* Style buttons inside sidebar to act like menu items */
+  button.menu-item {
+    background: none;
+    border: none;
+    width: 100%;
+    text-align: left;
+    justify-content: flex-start;
+  }
+
+  .menu-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    border-radius: var(--radius);
+    color: var(--text-secondary);
+    text-decoration: none;
+    gap: 12px;
+    cursor: pointer;
+    transition: all var(--transition);
+    white-space: nowrap;
+
+    &:hover {
+      background-color: var(--bg-elevated);
+      color: var(--text-primary);
+      
+      .icon {
+        color: var(--accent);
+        transform: scale(1.05);
+      }
+    }
+
+    &.active {
+      background-color: var(--accent-dim);
+      color: var(--text-primary);
+      font-weight: 500;
+      border-left: 3px solid var(--accent);
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+      padding-left: 9px;
+
+      .icon {
+        color: var(--accent);
+      }
+    }
+
+    .icon {
+      width: 18px;
+      height: 18px;
+      transition: all var(--transition);
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .menu-text {
+      font-size: 13px;
+      transition: opacity var(--transition), visibility var(--transition), transform var(--transition);
+    }
+  }
+
+  .menu-divider {
+    height: 1px;
+    background-color: var(--border);
+    margin: 12px 8px;
+  }
+}
+
+.sidebar-footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  overflow: hidden;
+  transition: padding var(--transition);
+
+  .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: var(--accent);
+    color: #0c0e14;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    flex-shrink: 0;
+    box-shadow: 0 0 8px rgba(91, 192, 248, 0.3);
+  }
+
+  .user-details {
+    display: flex;
+    flex-direction: column;
+    transition: opacity var(--transition), visibility var(--transition), transform var(--transition);
+    white-space: nowrap;
+
+    .user-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .user-status {
+      font-size: 11px;
+      color: var(--accent-green);
+      font-weight: 500;
+    }
+  }
+}
+
+.main-content {
+  flex: 1;
+  height: 100%;
+  overflow-y: auto;
+  background-color: var(--bg-primary);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
