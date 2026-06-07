@@ -13,6 +13,8 @@ MAXERZ_BUILD_INSTRUCTIONS.md
 *.suo
 appsettings.Development.json
 maxerz_port.txt
+src/MaxerZ.Maui/Resources/Templates/cover_letter_en.json
+src/MaxerZ.Maui/Resources/Templates/cover_letter_de.json
 
 # DB files
 *.db

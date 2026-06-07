@@ -1,6 +1,6 @@
 {
-  "language": "de",
-  "templateName": "Professional Cover Letter - German",
+  "language": "en",
+  "templateName": "Professional Cover Letter - English",
   "pageFormat": "A4",
   "pageMargins": {
     "top": 20,
@@ -10,39 +10,40 @@
   },
   "header": {
     "enabled": true,
-    "imagePath": "header_de.png",
+    "imagePath": "header_en.png",
     "height": 100,
     "backgroundColor": "transparent"
   },
   "footer": {
     "enabled": true,
-    "imagePath": "footer_de.png",
+    "imagePath": "footer_en.png",
     "height": 40,
     "backgroundColor": "transparent"
   },
   "contactInformation": {
-    "fullName": "Majid Behzadi",
+    "fullName": "Jane Doe",
     "title": "Full-Stack Engineer | C# & ASP.NET Core | TypeScript & JavaScript",
-    "phone": "+43 676 970 1820",
-    "email": "maxbehzadi82@gmail.com",
-    "website": "www.maxbehzadi.online",
-    "github": "github.com/MaxTheGeeek",
+    "phone": "+1 555-0199",
+    "email": "jane.doe@example.com",
+    "website": "www.janedoe.com",
+    "github": "github.com/janedoe",
+    "linkedIn": "linkedin.com/in/janedoe",
     "addresses": [
       {
         "id": 1,
         "primary": true,
-        "street": "Wehlistraße 334",
-        "city": "1020 Wien",
-        "country": "Österreich",
-        "recommendedFor": "Companies in Vienna and metropolitan area"
+        "street": "Main Street 123",
+        "city": "10001 New York",
+        "country": "United States",
+        "recommendedFor": "Local positions"
       },
       {
         "id": 2,
         "primary": false,
-        "street": "Wiener Straße 20/1",
-        "city": "2442 Unterwaltersdorf",
-        "country": "Österreich",
-        "recommendedFor": "All other Austrian companies"
+        "street": "Broadway 456",
+        "city": "94105 San Francisco",
+        "country": "United States",
+        "recommendedFor": "West coast positions"
       }
     ]
   },
@@ -154,15 +155,15 @@
     }
   },
   "formatting": {
-    "dateFormat": "dd. MMMM yyyy",
-    "dateLocale": "de-AT",
+    "dateFormat": "MMMM d, yyyy",
+    "dateLocale": "en-US",
     "dateExamples": [
-      "1. Januar 2026",
-      "6. Juni 2026",
-      "25. Dezember 2026"
+      "January 1, 2026",
+      "June 6, 2026",
+      "December 25, 2026"
     ],
-    "salutationPrefix": "Sehr geehrte/r",
-    "closingLine": "Mit freundlichen Grüßen,",
+    "salutationPrefix": "Dear",
+    "closingLine": "Best regards,",
     "horizontalRule": {
       "enabled": false,
       "color": "#CCCCCC",
@@ -171,11 +172,11 @@
   },
   "instructions": {
     "companyNameFormatting": "Bold, 11pt, proper capitalization",
-    "positionFormatting": "Subject line (Betreff:), bold, 10.5pt, accent blue #006CA5",
+    "positionFormatting": "Subject line (Re:), bold, 10.5pt, accent blue #006CA5",
     "bodyFormatting": "10.5pt, line-height 1.4, paragraph spacing 8pt",
-    "addressSelection": "Address 1 (Wehlistraße) for Vienna companies, Address 2 (Wiener Straße) for all others",
-    "germanSpecific": "Always use de-AT locale for date formatting. Examples: 1. Januar, 6. Juni, 25. Dezember",
+    "addressSelection": "Address 1 for local companies, Address 2 for all others",
+    "englishSpecific": "Always use en-US locale for date formatting.",
     "punctuation": "No em-dashes or double dashes. Use only: commas, periods, colons, semicolons",
-    "keyTerms": "Always mention: OOP, SOLID principles, Azure experience, AWS (S3/RDS), CQRS where relevant"
+    "keyTerms": "Always mention relevant technical experience"
   }
 }

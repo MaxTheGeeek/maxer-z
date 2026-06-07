@@ -1,6 +1,6 @@
 {
-  "language": "en",
-  "templateName": "Professional Cover Letter - English",
+  "language": "de",
+  "templateName": "Professional Cover Letter - German",
   "pageFormat": "A4",
   "pageMargins": {
     "top": 20,
@@ -10,40 +10,39 @@
   },
   "header": {
     "enabled": true,
-    "imagePath": "header_en.png",
+    "imagePath": "header_de.png",
     "height": 100,
     "backgroundColor": "transparent"
   },
   "footer": {
     "enabled": true,
-    "imagePath": "footer_en.png",
+    "imagePath": "footer_de.png",
     "height": 40,
     "backgroundColor": "transparent"
   },
   "contactInformation": {
-    "fullName": "Majid Behzadi",
+    "fullName": "Max Mustermann",
     "title": "Full-Stack Engineer | C# & ASP.NET Core | TypeScript & JavaScript",
-    "phone": "+43 676 970 1820",
-    "email": "maxbehzadi82@gmail.com",
-    "website": "www.maxbehzadi.online",
-    "github": "github.com/MaxTheGeeek",
-    "linkedIn": "linkedin.com/in/maxii",
+    "phone": "+43 664 1234567",
+    "email": "max.mustermann@example.at",
+    "website": "www.maxmustermann.at",
+    "github": "github.com/maxmustermann",
     "addresses": [
       {
         "id": 1,
         "primary": true,
-        "street": "Wehlistrasse 334",
-        "city": "1020 Vienna",
-        "country": "Austria",
-        "recommendedFor": "Companies in Vienna and metropolitan area"
+        "street": "Musterstraße 12",
+        "city": "1010 Wien",
+        "country": "Österreich",
+        "recommendedFor": "Firmen in Wien und Umgebung"
       },
       {
         "id": 2,
         "primary": false,
-        "street": "Wiener Strasse 20/1",
+        "street": "Hauptstraße 34",
         "city": "2442 Unterwaltersdorf",
-        "country": "Austria",
-        "recommendedFor": "All other Austrian companies"
+        "country": "Österreich",
+        "recommendedFor": "Firmen in anderen Bundesländern"
       }
     ]
   },
@@ -155,15 +154,15 @@
     }
   },
   "formatting": {
-    "dateFormat": "MMMM d, yyyy",
-    "dateLocale": "en-US",
+    "dateFormat": "dd. MMMM yyyy",
+    "dateLocale": "de-AT",
     "dateExamples": [
-      "January 1, 2026",
-      "June 6, 2026",
-      "December 25, 2026"
+      "1. Januar 2026",
+      "6. Juni 2026",
+      "25. Dezember 2026"
     ],
-    "salutationPrefix": "Dear",
-    "closingLine": "Best regards,",
+    "salutationPrefix": "Sehr geehrte/r",
+    "closingLine": "Mit freundlichen Grüßen,",
     "horizontalRule": {
       "enabled": false,
       "color": "#CCCCCC",
@@ -172,11 +171,11 @@
   },
   "instructions": {
     "companyNameFormatting": "Bold, 11pt, proper capitalization",
-    "positionFormatting": "Subject line (Re:), bold, 10.5pt, accent blue #006CA5",
+    "positionFormatting": "Subject line (Betreff:), bold, 10.5pt, accent blue #006CA5",
     "bodyFormatting": "10.5pt, line-height 1.4, paragraph spacing 8pt",
-    "addressSelection": "Address 1 (Wehlistrasse) for Vienna companies, Address 2 (Wiener Strasse) for all others",
-    "englishSpecific": "Always use en-US locale for date formatting. Examples: January 1, June 6, December 25",
+    "addressSelection": "Adresse 1 für Wiener Firmen, Adresse 2 für alle anderen",
+    "germanSpecific": "Always use de-AT locale for date formatting.",
     "punctuation": "No em-dashes or double dashes. Use only: commas, periods, colons, semicolons",
-    "keyTerms": "Always mention: OOP, SOLID principles, Azure experience, AWS (S3/RDS), CQRS where relevant"
+    "keyTerms": "Always mention relevant technical experience"
   }
 }
