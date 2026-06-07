@@ -1,0 +1,41 @@
+:root {
+  --bg-primary: #0C0E14;
+  --bg-secondary: #131620;
+  --bg-card: #191D2A;
+  --bg-elevated: #1F2436;
+  --border: #272D42;
+  --border-light: #323A55;
+
+  --text-primary: #E6E9F4;
+  --text-secondary: #8890AC;
+  --text-muted: #4D5570;
+
+  --accent: #5BC0F8;           // Sky blue — position highlight
+  --accent-dim: rgba(91,192,248,0.12);
+  --accent-green: #3DD6B5;     // Success
+  --accent-amber: #F5A623;     // Warning
+  --accent-red: #FF5C5C;       // Error
+
+  --sidebar-width: 220px;
+  --sidebar-collapsed: 54px;
+
+  --font: 'Inter', -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --radius: 8px;
+  --radius-lg: 14px;
+  --transition: 180ms cubic-bezier(0.4, 0, 0.2, 1);
+  --shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+[data-theme='light'] {
+  --bg-primary: #F2F4FA;
+  --bg-secondary: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --bg-elevated: #EDF0F9;
+  --border: #DDE1EF;
+  --border-light: #C5CADE;
+  --text-primary: #191D2E;
+  --text-secondary: #4B5270;
+  --text-muted: #8890AC;
+}
