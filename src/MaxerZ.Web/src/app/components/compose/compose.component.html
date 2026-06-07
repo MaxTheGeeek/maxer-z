@@ -1,0 +1,124 @@
+<div class="compose-container">
+  <header class="compose-header">
+    <h1 class="page-title">Generate Cover Letter</h1>
+    <p class="page-desc">Enter target position parameters and the job posting details to write a structured, ATS-optimized cover letter.</p>
+  </header>
+
+  <!-- Providers active status or warning -->
+  @if (noProvidersWarning()) {
+    <div class="warning-banner">
+      <svg class="warn-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
+      <div>
+        <strong>No Active LLM Providers:</strong> You have not configured credentials for any provider. The system will fall back to local Raw templates. Please update your <a routerLink="/settings" class="inline-link">API Keys</a>.
+      </div>
+    </div>
+  } @else {
+    <div class="info-banner">
+      <svg class="info-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <div>
+        Active cascading pipeline: <strong>{{ activeProviders().join(' → ') }}</strong>
+      </div>
+    </div>
+  }
+
+  <div class="compose-grid">
+    <!-- Left Column: Form Details -->
+    <div class="card compose-form">
+      <h2 class="card-title">Company & Position Details</h2>
+      
+      <div class="form-group">
+        <label for="comp-name">Company Name *</label>
+        <input type="text" id="comp-name" [(ngModel)]="companyName" placeholder="e.g. Google, Stripe" />
+      </div>
+
+      <div class="form-group">
+        <label for="target-pos">Target Position *</label>
+        <input type="text" id="target-pos" [(ngModel)]="position" placeholder="e.g. Senior Frontend Engineer" />
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="contact-person">Contact Person (Optional)</label>
+          <input type="text" id="contact-person" [(ngModel)]="contactPerson" placeholder="e.g. Dr. Jane Smith, Hiring Manager" />
+        </div>
+        <div class="form-group">
+          <label for="dept-name">Department (Optional)</label>
+          <input type="text" id="dept-name" [(ngModel)]="department" placeholder="e.g. Engineering Team" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group flex-2">
+          <label for="comp-loc">Company Location *</label>
+          <input type="text" id="comp-loc" [(ngModel)]="companyLocation" placeholder="e.g. Munich, Germany or Remote" />
+        </div>
+        <div class="form-group flex-1">
+          <label for="letter-lang">Language *</label>
+          <select id="letter-lang" [ngModel]="language()" (ngModelChange)="onLanguageChange($event)">
+            <option value="en">English (US/UK)</option>
+            <option value="de">Deutsch (German)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn-secondary" (click)="clearForm()" [disabled]="isGenerating()">Clear Draft</button>
+      </div>
+    </div>
+
+    <!-- Right Column: Prompts & Submission -->
+    <div class="card compose-prompt">
+      <h2 class="card-title">Job Description & Prompt Details *</h2>
+      <p class="field-help">Paste the full job description text or specify custom instructions. The AI orchestrator will analyze these parameters against your profile details to tailor the content.</p>
+      
+      <div class="form-group flex-fill">
+        <textarea id="prompt-text" [(ngModel)]="coverLetterBody" [placeholder]="bodyPlaceholder()" class="prompt-textarea"></textarea>
+      </div>
+
+      @if (formError()) {
+        <div class="error-alert">
+          {{ formError() }}
+        </div>
+      }
+
+      <button class="btn-primary generate-btn" (click)="generate()" 
+              [disabled]="isGenerating() || !companyName().trim() || !position().trim() || !companyLocation().trim() || !coverLetterBody().trim()">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="btn-icon">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 21l8.982-11.795H12.91L13.75 3 5 14.805H9.81Z" />
+        </svg>
+        <span>Generate Draft Cover Letter</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Detailed Loading Console Overlay -->
+  @if (isGenerating()) {
+    <div class="console-overlay">
+      <div class="console-box card">
+        <div class="console-header">
+          <div class="console-dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+          </div>
+          <span class="console-title">MaxerZ AI Cascading Engine Logs</span>
+        </div>
+        <div class="console-body">
+          @for (log of progressLogs(); track log) {
+            <div class="console-line" [class.error-line]="log.startsWith('✗')" [class.success-line]="log.startsWith('✓')">
+              <span class="console-prompt">></span> {{ log }}
+            </div>
+          }
+          <div class="console-spinner-row">
+            <div class="spinner"></div>
+            <span>Generating structured cover letter layout... Please do not close the window.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>
