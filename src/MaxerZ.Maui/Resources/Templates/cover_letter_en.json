@@ -1,0 +1,182 @@
+{
+  "language": "en",
+  "templateName": "Professional Cover Letter - English",
+  "pageFormat": "A4",
+  "pageMargins": {
+    "top": 20,
+    "bottom": 20,
+    "left": 42,
+    "right": 42
+  },
+  "header": {
+    "enabled": true,
+    "imagePath": "header_en.png",
+    "height": 100,
+    "backgroundColor": "transparent"
+  },
+  "footer": {
+    "enabled": true,
+    "imagePath": "footer_en.png",
+    "height": 40,
+    "backgroundColor": "transparent"
+  },
+  "contactInformation": {
+    "fullName": "Majid Behzadi",
+    "title": "Full-Stack Engineer | C# & ASP.NET Core | TypeScript & JavaScript",
+    "phone": "+43 676 970 1820",
+    "email": "maxbehzadi82@gmail.com",
+    "website": "www.maxbehzadi.online",
+    "github": "github.com/MaxTheGeeek",
+    "linkedIn": "linkedin.com/in/maxii",
+    "addresses": [
+      {
+        "id": 1,
+        "primary": true,
+        "street": "Wehlistrasse 334",
+        "city": "1020 Vienna",
+        "country": "Austria",
+        "recommendedFor": "Companies in Vienna and metropolitan area"
+      },
+      {
+        "id": 2,
+        "primary": false,
+        "street": "Wiener Strasse 20/1",
+        "city": "2442 Unterwaltersdorf",
+        "country": "Austria",
+        "recommendedFor": "All other Austrian companies"
+      }
+    ]
+  },
+  "typography": {
+    "fontFamily": "Helvetica Neue",
+    "bodyFont": {
+      "name": "Helvetica Neue",
+      "size": 10.5,
+      "weight": "regular",
+      "lineHeight": 1.4,
+      "color": "#1A1A2E"
+    },
+    "headingFont": {
+      "name": "Helvetica Neue",
+      "size": 11,
+      "weight": "bold",
+      "color": "#1A1A2E"
+    },
+    "accentFont": {
+      "name": "Helvetica Neue",
+      "size": 10.5,
+      "weight": "bold",
+      "color": "#006CA5"
+    },
+    "smallFont": {
+      "name": "Helvetica Neue",
+      "size": 10,
+      "weight": "regular",
+      "color": "#555555"
+    }
+  },
+  "colors": {
+    "primary": "#1A1A2E",
+    "accent": "#006CA5",
+    "accentLight": "#1A7AC7",
+    "secondary": "#555555",
+    "tertiary": "#444444",
+    "divider": "#CCCCCC",
+    "background": "#FFFFFF"
+  },
+  "layout": {
+    "companyInfo": {
+      "marginTop": 18,
+      "marginBottom": 0,
+      "spacing": {
+        "companyName": {
+          "fontSize": 11,
+          "fontWeight": "bold",
+          "color": "#1A1A2E",
+          "marginBottom": 4
+        },
+        "contactPerson": {
+          "fontSize": 10,
+          "fontWeight": "regular",
+          "color": "#555555",
+          "marginBottom": 2
+        },
+        "department": {
+          "fontSize": 10,
+          "fontWeight": "regular",
+          "color": "#555555",
+          "marginBottom": 2
+        },
+        "location": {
+          "fontSize": 10,
+          "fontWeight": "regular",
+          "color": "#555555",
+          "marginBottom": 2
+        },
+        "date": {
+          "fontSize": 10,
+          "fontWeight": "regular",
+          "color": "#444444",
+          "textAlign": "right"
+        }
+      }
+    },
+    "subject": {
+      "marginTop": 18,
+      "marginBottom": 14,
+      "fontSize": 10.5,
+      "fontWeight": "bold",
+      "color": "#006CA5"
+    },
+    "salutation": {
+      "marginBottom": 10,
+      "fontSize": 10.5,
+      "fontWeight": "regular",
+      "color": "#1A1A2E"
+    },
+    "body": {
+      "fontSize": 10.5,
+      "fontWeight": "regular",
+      "color": "#1A1A2E",
+      "lineHeight": 1.4,
+      "paragraphSpacing": 8,
+      "marginBottom": 16
+    },
+    "closing": {
+      "marginBottom": 30,
+      "fontSize": 10.5,
+      "fontWeight": "regular",
+      "color": "#1A1A2E"
+    },
+    "signature": {
+      "fontSize": 10.5,
+      "fontWeight": "bold",
+      "color": "#1A1A2E"
+    }
+  },
+  "formatting": {
+    "dateFormat": "MMMM d, yyyy",
+    "dateLocale": "en-US",
+    "dateExamples": [
+      "January 1, 2026",
+      "June 6, 2026",
+      "December 25, 2026"
+    ],
+    "salutationPrefix": "Dear",
+    "closingLine": "Best regards,",
+    "horizontalRule": {
+      "enabled": false,
+      "color": "#CCCCCC",
+      "thickness": 0.5
+    }
+  },
+  "instructions": {
+    "companyNameFormatting": "Bold, 11pt, proper capitalization",
+    "positionFormatting": "Subject line (Re:), bold, 10.5pt, accent blue #006CA5",
+    "bodyFormatting": "10.5pt, line-height 1.4, paragraph spacing 8pt",
+    "addressSelection": "Address 1 (Wehlistrasse) for Vienna companies, Address 2 (Wiener Strasse) for all others",
+    "englishSpecific": "Always use en-US locale for date formatting. Examples: January 1, June 6, December 25",
+    "punctuation": "No em-dashes or double dashes. Use only: commas, periods, colons, semicolons",
+    "keyTerms": "Always mention: OOP, SOLID principles, Azure experience, AWS (S3/RDS), CQRS where relevant"
+  }
+}
