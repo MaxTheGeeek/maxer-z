@@ -1,0 +1,268 @@
+<div class="settings-container">
+  <header class="settings-header">
+    <h1 class="page-title">Configuration Settings</h1>
+    <p class="page-desc">Configure LLM providers, user profiles, MCP server integrations, and general application preferences.</p>
+  </header>
+
+  <!-- Tabs Navigation -->
+  <div class="tabs-nav">
+    <button class="tab-link" [class.active]="activeTab() === 'api'" (click)="changeTab('api')">
+      <svg class="tab-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z" />
+      </svg>
+      <span>API Credentials</span>
+    </button>
+    <button class="tab-link" [class.active]="activeTab() === 'profile'" (click)="changeTab('profile')">
+      <svg class="tab-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+      </svg>
+      <span>User Profile</span>
+    </button>
+    <button class="tab-link" [class.active]="activeTab() === 'mcp'" (click)="changeTab('mcp')">
+      <svg class="tab-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M5.636 5.636l3.536 3.536m0 5.656l-3.536 3.536M9.172 9.172a4 4 0 115.656 5.656 4 4 0 01-5.656-5.656z" />
+      </svg>
+      <span>MCP Gateway</span>
+    </button>
+    <button class="tab-link" [class.active]="activeTab() === 'app'" (click)="changeTab('app')">
+      <svg class="tab-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.43l-1.003.828c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.43l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.645-.869L9.594 3.94Z" />
+      </svg>
+      <span>Application Settings</span>
+    </button>
+  </div>
+
+  <div class="settings-content card">
+    <!-- Spinner Loader -->
+    @if (isLoading()) {
+      <div class="loader-overlay">
+        <div class="spinner"></div>
+        <span>Loading configurations...</span>
+      </div>
+    }
+
+    <!-- Tab 1: API Settings -->
+    @if (activeTab() === 'api') {
+      <div class="tab-panel">
+        <h2 class="panel-title">API Key & LLM Setup</h2>
+        <p class="panel-subtitle">Configure your API credentials for AI orchestrator provider cascading.</p>
+
+        <!-- OpenRouter Settings -->
+        <fieldset class="provider-fieldset">
+          <legend>OpenRouter (Primary Web-Scale LLM)</legend>
+          <div class="form-group">
+            <label for="or-key">OpenRouter API Key</label>
+            <input type="password" id="or-key" [(ngModel)]="settings().openRouterApiKey" placeholder="sk-or-..." />
+          </div>
+          
+          <div class="action-row">
+            <button class="btn-secondary" (click)="testProvider('openrouter')" [disabled]="testStates()['openrouter'].loading">
+              @if (testStates()['openrouter'].loading) {
+                <div class="spinner"></div> Testing...
+              } @else {
+                Test Connection
+              }
+            </button>
+            @if (testStates()['openrouter'].message) {
+              <span class="test-feedback" [class.success]="testStates()['openrouter'].success" [class.error]="!testStates()['openrouter'].success">
+                {{ testStates()['openrouter'].message }}
+              </span>
+            }
+          </div>
+        </fieldset>
+
+        <!-- Groq Settings -->
+        <fieldset class="provider-fieldset">
+          <legend>Groq (Ultra Fast Secondary)</legend>
+          <div class="form-row">
+            <div class="form-group flex-2">
+              <label for="groq-key">Groq API Key</label>
+              <input type="password" id="groq-key" [(ngModel)]="settings().groqApiKey" placeholder="gsk_..." />
+            </div>
+            <div class="form-group flex-1">
+              <label for="groq-model">Model</label>
+              <input type="text" id="groq-model" [(ngModel)]="settings().groqModel" />
+            </div>
+          </div>
+          <div class="action-row">
+            <button class="btn-secondary" (click)="testProvider('groq')" [disabled]="testStates()['groq'].loading">
+              @if (testStates()['groq'].loading) {
+                <div class="spinner"></div> Testing...
+              } @else {
+                Test Connection
+              }
+            </button>
+            @if (testStates()['groq'].message) {
+              <span class="test-feedback" [class.success]="testStates()['groq'].success" [class.error]="!testStates()['groq'].success">
+                {{ testStates()['groq'].message }}
+              </span>
+            }
+          </div>
+        </fieldset>
+
+        <!-- Ollama Settings -->
+        <fieldset class="provider-fieldset">
+          <legend>Ollama (Local Offline Fallback)</legend>
+          <div class="form-row">
+            <div class="form-group flex-2">
+              <label for="ollama-url">Base URL</label>
+              <input type="text" id="ollama-url" [(ngModel)]="settings().ollamaBaseUrl" />
+            </div>
+            <div class="form-group flex-1">
+              <label for="ollama-model">Model</label>
+              <input type="text" id="ollama-model" [(ngModel)]="settings().ollamaModel" />
+            </div>
+          </div>
+          <div class="action-row">
+            <button class="btn-secondary" (click)="testProvider('ollama')" [disabled]="testStates()['ollama'].loading">
+              @if (testStates()['ollama'].loading) {
+                <div class="spinner"></div> Testing...
+              } @else {
+                Test Connection
+              }
+            </button>
+            @if (testStates()['ollama'].message) {
+              <span class="test-feedback" [class.success]="testStates()['ollama'].success" [class.error]="!testStates()['ollama'].success">
+                {{ testStates()['ollama'].message }}
+              </span>
+            }
+          </div>
+        </fieldset>
+      </div>
+    }
+
+    <!-- Tab 2: User Profile -->
+    @if (activeTab() === 'profile') {
+      <div class="tab-panel">
+        <h2 class="panel-title">Applicant User Profile</h2>
+        <p class="panel-subtitle">Personal info used to automatically pre-fill cover letter details and layouts.</p>
+
+        <div class="form-group">
+          <label for="prof-name">Full Name</label>
+          <input type="text" id="prof-name" [(ngModel)]="settings().profile.fullName" placeholder="Jane Doe" />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="prof-email">Email Address</label>
+            <input type="email" id="prof-email" [(ngModel)]="settings().profile.email" placeholder="jane.doe@example.com" />
+          </div>
+          <div class="form-group">
+            <label for="prof-phone">Phone Number</label>
+            <input type="tel" id="prof-phone" [(ngModel)]="settings().profile.phone" placeholder="+1 555-0199" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="prof-linkedin">LinkedIn URL</label>
+            <input type="url" id="prof-linkedin" [(ngModel)]="settings().profile.linkedInUrl" placeholder="https://linkedin.com/in/username" />
+          </div>
+          <div class="form-group">
+            <label for="prof-github">GitHub Profile URL</label>
+            <input type="url" id="prof-github" [(ngModel)]="settings().profile.gitHubUrl" placeholder="https://github.com/username" />
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Tab 3: MCP settings -->
+    @if (activeTab() === 'mcp') {
+      <div class="tab-panel">
+        <h2 class="panel-title">Model Context Protocol (MCP) Gateway</h2>
+        <p class="panel-subtitle">Sync your generated cover letters to external indexers for seamless agent discovery.</p>
+ 
+        <div class="checkbox-group">
+          <input type="checkbox" id="mcp-enabled" [(ngModel)]="mcpConfig().isEnabled" />
+          <label for="mcp-enabled" class="checkbox-label">Enable MCP Synchronization</label>
+        </div>
+ 
+        <fieldset class="mcp-fieldset" [disabled]="!mcpConfig().isEnabled">
+          <div class="form-group">
+            <label for="mcp-endpoint">MCP Server Indexer Endpoint URL</label>
+            <input type="text" id="mcp-endpoint" [(ngModel)]="mcpConfig().mcpBaseUrl" placeholder="http://localhost:8080/index" />
+          </div>
+          <div class="form-group">
+            <label for="mcp-key">MCP Gateway Secret Token / API Key</label>
+            <input type="password" id="mcp-key" [(ngModel)]="mcpConfig().mcpApiKey" placeholder="mcp_secret_token" />
+          </div>
+        </fieldset>
+ 
+        <div class="action-row">
+          <button class="btn-secondary" (click)="testMcp()" [disabled]="!mcpConfig().isEnabled || testStates()['mcp'].loading">
+            @if (testStates()['mcp'].loading) {
+              <div class="spinner"></div> Testing MCP...
+            } @else {
+              Test Gateway Handshake
+            }
+          </button>
+          @if (testStates()['mcp'].message) {
+            <span class="test-feedback" [class.success]="testStates()['mcp'].success" [class.error]="!testStates()['mcp'].success">
+              {{ testStates()['mcp'].message }}
+            </span>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Tab 4: App settings -->
+    @if (activeTab() === 'app') {
+      <div class="tab-panel">
+        <h2 class="panel-title">Application Preferences</h2>
+        <p class="panel-subtitle">Configure directory exports, theme profiles, and provider fallback order.</p>
+
+        <div class="form-row">
+          <div class="form-group flex-2">
+            <label for="app-export">Default PDF Export Directory Path</label>
+            <input type="text" id="app-export" [(ngModel)]="settings().exportDirectory" placeholder="/Users/username/Documents/MaxerZ" />
+          </div>
+          <div class="form-group flex-1">
+            <label for="app-theme">Interface Theme</label>
+            <select id="app-theme" [(ngModel)]="settings().theme">
+              <option value="dark">Dark Theme</option>
+              <option value="light">Light Theme</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="priority-group">
+          <label>AI Provider Cascading Priority Order</label>
+          <p class="field-help">Adjust the cascade list order. The generator queries providers from top to bottom, falling back to next options if a provider rate-limits, fails, or credentials are invalid.</p>
+          
+          <ul class="priority-list">
+            @for (prov of settings().providerPriority; track prov; let idx = $index) {
+              <li class="priority-item">
+                <span class="item-index">{{ idx + 1 }}</span>
+                <span class="item-name">{{ prov }}</span>
+                <div class="item-actions">
+                  <button class="icon-btn" (click)="movePriority(idx, 'up')" [disabled]="idx === 0" title="Move Up">
+                    ▲
+                  </button>
+                  <button class="icon-btn" (click)="movePriority(idx, 'down')" [disabled]="idx === settings().providerPriority.length - 1" title="Move Down">
+                    ▼
+                  </button>
+                </div>
+              </li>
+            }
+          </ul>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Floating Save Actions Bar -->
+  <div class="actions-bar">
+    @if (saveStatus()) {
+      <div class="status-alert" [class.success]="saveStatus()?.success" [class.error]="!saveStatus()?.success">
+        {{ saveStatus()?.message }}
+      </div>
+    }
+    <button class="btn-primary" (click)="saveAllSettings()" [disabled]="isLoading()">
+      @if (isLoading()) {
+        <div class="spinner"></div> Saving...
+      } @else {
+        Save Configurations
+      }
+    </button>
+  </div>
+</div>
