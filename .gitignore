@@ -1,0 +1,42 @@
+# Local .NET SDK
+.dotnet/
+dotnet-install.sh
+
+# Instructions
+MAXERZ_BUILD_INSTRUCTIONS.md
+*INSTRUCTIONS.md
+*instructions.md
+
+# User secrets and keys
+*.user
+*.userprefs
+*.suo
+appsettings.Development.json
+maxerz_port.txt
+
+# DB files
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+maxerz.db
+
+# Build directories
+[Bb]in/
+[Oo]bj/
+src/MaxerZ.Api/wwwroot/
+
+# Node & Angular
+node_modules/
+.angular/
+dist/
+/out-tsc
+
+# IDEs
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+*.log

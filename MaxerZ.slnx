@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/MaxerZ.Api/MaxerZ.Api.csproj" />
+    <Project Path="src/MaxerZ.Maui/MaxerZ.Maui.csproj" />
+  </Folder>
+</Solution>
