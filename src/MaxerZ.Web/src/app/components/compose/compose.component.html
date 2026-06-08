@@ -72,6 +72,11 @@
           </div>
         </div>
 
+        <div class="form-group" style="margin-top: 15px;">
+          <label for="header-address-1">Header Address (Only Changeable Header Field)</label>
+          <input type="text" id="header-address-1" [(ngModel)]="headerAddress" placeholder="Wiener Straße 20 / 1, 2442 Unterwaltersdorf" />
+        </div>
+
         <div class="form-actions">
           <button class="btn-secondary" (click)="clearForm()" [disabled]="isGenerating()">Clear Draft</button>
         </div>
@@ -150,6 +155,11 @@
               <option value="template_2">Template 2 (Modern Minimalist)</option>
             </select>
           </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 15px;">
+          <label for="header-address-2">Header Address (Only Changeable Header Field)</label>
+          <input type="text" id="header-address-2" [(ngModel)]="headerAddress" placeholder="Wiener Straße 20 / 1, 2442 Unterwaltersdorf" />
         </div>
 
         <div class="form-actions">

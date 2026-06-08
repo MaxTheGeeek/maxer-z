@@ -12,6 +12,7 @@ namespace MaxerZ.Api.Models
         public string Position { get; set; } = "";
         public string Language { get; set; } = "en"; // "en" | "de"
         public string SelectedTemplate { get; set; } = "template_1"; // "template_1" | "template_2"
+        public string? HeaderAddress { get; set; }
         public string CoverLetterBody { get; set; } = "";
     }
 }

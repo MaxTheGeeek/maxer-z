@@ -19,6 +19,7 @@ export class ComposeComponent implements OnInit {
   // Option 1: My Cover Letter fields
   rawRecipientInfo = signal('');
   existingCoverLetterBody = signal('');
+  headerAddress = signal('');
 
   // Option 2: AI Generation fields
   companyName = signal('');
@@ -74,7 +75,17 @@ export class ComposeComponent implements OnInit {
       this.companyLocation.set(draft.companyLocation || '');
       this.language.set(draft.language || 'en');
       this.selectedTemplate.set(draft.selectedTemplate || 'template_1');
+      this.headerAddress.set(draft.headerAddress || '');
       this.updatePlaceholder(draft.language || 'en');
+    } else {
+      // Prefill address from user settings profile
+      this.settingsService.getSettings().subscribe(s => {
+        if (s && s.profile && s.profile.address) {
+          this.headerAddress.set(s.profile.address);
+        } else {
+          this.headerAddress.set('Wiener Straße 20 / 1, 2442 Unterwaltersdorf');
+        }
+      });
     }
   }
 
@@ -138,6 +149,7 @@ export class ComposeComponent implements OnInit {
         companyLocation: '', // Extracted by backend LLM
         language: this.language(),
         selectedTemplate: this.selectedTemplate(),
+        headerAddress: this.headerAddress().trim(),
         coverLetterBody: this.existingCoverLetterBody().trim()
       };
     } else {
@@ -160,6 +172,7 @@ export class ComposeComponent implements OnInit {
         companyLocation: this.companyLocation().trim(),
         language: this.language(),
         selectedTemplate: this.selectedTemplate(),
+        headerAddress: this.headerAddress().trim(),
         jobDescription: this.jobDescription().trim(),
         coverLetterBody: this.coverLetterBody().trim()
       };
@@ -228,5 +241,13 @@ export class ComposeComponent implements OnInit {
     this.updatePlaceholder('en');
     this.formError.set(null);
     this.coverLetterService.setComposeState(null);
+    
+    this.settingsService.getSettings().subscribe(s => {
+      if (s && s.profile && s.profile.address) {
+        this.headerAddress.set(s.profile.address);
+      } else {
+        this.headerAddress.set('Wiener Straße 20 / 1, 2442 Unterwaltersdorf');
+      }
+    });
   }
 }

@@ -41,7 +41,51 @@ namespace MaxerZ.Api.Services
             var brushSecondary = new XSolidBrush(XColor.FromArgb(0x55, 0x55, 0x55));
             var brushAccent = new XSolidBrush(XColor.FromArgb(0x00, 0x6C, 0xA5));
 
-            // Define fonts
+            // Wipe pre-baked header area on the template page
+            gfx.DrawRectangle(XBrushes.White, 0, 0, 595, 120);
+
+            // Define header fonts & brushes
+            var headerNameFont = new XFont("Arial", 17, XFontStyle.Bold);
+            var headerRoleFont = new XFont("Arial", 10.5, XFontStyle.Regular);
+            var headerInfoFont = new XFont("Arial", 8.5, XFontStyle.Regular);
+            var brushHeaderBlue = new XSolidBrush(XColor.FromArgb(0x00, 0x6C, 0xA5));
+            var brushHeaderDark = new XSolidBrush(XColor.FromArgb(0x33, 0x33, 0x33));
+
+            // Line 1: Name
+            DrawCenteredSegments(gfx, 50, new TextSegment
+            {
+                Text = "MAJID BEHZADI",
+                Font = headerNameFont,
+                Brush = brushHeaderBlue
+            });
+
+            // Line 2: Role / Skills
+            DrawCenteredSegments(gfx, 68, new TextSegment
+            {
+                Text = "Full-Stack Engineer | C# & ASP.NET Core | TypeScript & JavaScript",
+                Font = headerRoleFont,
+                Brush = brushHeaderDark
+            });
+
+            // Line 3: Contact Details
+            DrawCenteredSegments(gfx, 83, 
+                new TextSegment { Text = "+43 6769701820 | maxbehzadi82@gmail.com | ", Font = headerInfoFont, Brush = brushHeaderDark },
+                new TextSegment { Text = "linkedin.com/in/maxii", Font = headerInfoFont, Brush = brushHeaderBlue },
+                new TextSegment { Text = " | Portfolio: ", Font = headerInfoFont, Brush = brushHeaderDark },
+                new TextSegment { Text = "maxbehzadi.online", Font = headerInfoFont, Brush = brushHeaderBlue }
+            );
+
+            // Line 4: GitHub & Address
+            var addressText = string.IsNullOrWhiteSpace(request.HeaderAddress) 
+                ? (_settings.Get().Profile.Address ?? "Wiener Straße 20 / 1, 2442 Unterwaltersdorf")
+                : request.HeaderAddress;
+
+            DrawCenteredSegments(gfx, 98, 
+                new TextSegment { Text = "github.com/MaxTheGeeek", Font = headerInfoFont, Brush = brushHeaderBlue },
+                new TextSegment { Text = " | " + addressText, Font = headerInfoFont, Brush = brushHeaderDark }
+            );
+
+            // Define standard layout fonts
             var fontCompany = new XFont("Arial", 11, XFontStyle.Bold);
             var fontInfo = new XFont("Arial", 10, XFontStyle.Regular);
             var fontSubject = new XFont("Arial", 10.5, XFontStyle.Bold);
@@ -209,6 +253,29 @@ namespace MaxerZ.Api.Services
             }
 
             return lines;
+        }
+
+        private struct TextSegment
+        {
+            public string Text { get; set; }
+            public XFont Font { get; set; }
+            public XBrush Brush { get; set; }
+        }
+
+        private void DrawCenteredSegments(XGraphics gfx, double y, params TextSegment[] segments)
+        {
+            double totalWidth = 0;
+            foreach (var seg in segments)
+            {
+                totalWidth += gfx.MeasureString(seg.Text, seg.Font).Width;
+            }
+
+            double currentX = (595 - totalWidth) / 2.0;
+            foreach (var seg in segments)
+            {
+                gfx.DrawString(seg.Text, seg.Font, seg.Brush, currentX, y);
+                currentX += gfx.MeasureString(seg.Text, seg.Font).Width;
+            }
         }
     }
 }

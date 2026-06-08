@@ -31,7 +31,8 @@ export class SettingsComponent implements OnInit {
       phone: '',
       linkedInUrl: '',
       gitHubUrl: '',
-      websiteUrl: ''
+      websiteUrl: '',
+      address: ''
     }
   });
 

@@ -76,6 +76,7 @@ namespace MaxerZ.Api.Controllers
                 UsedProvider = layout.UsedProvider,
                 UsedModel = layout.UsedModel,
                 SelectedTemplate = req.SelectedTemplate,
+                HeaderAddress = req.HeaderAddress ?? "",
                 Status = "exported"
             };
 

@@ -5,6 +5,7 @@ export interface UserProfile {
   linkedInUrl: string;
   gitHubUrl: string;
   websiteUrl: string;
+  address: string;
 }
 
 export interface AppSettings {
@@ -37,6 +38,7 @@ export interface CoverLetterRequest {
   companyLocation: string;
   language: string;
   selectedTemplate: string; // 'template_1' | 'template_2'
+  headerAddress?: string;
   coverLetterBody: string;
 }
 
@@ -55,6 +57,7 @@ export interface CoverLetterRecord {
   usedProvider: string;
   usedModel: string;
   selectedTemplate: string;
+  headerAddress?: string;
   syncedToMcp: boolean;
 }
 

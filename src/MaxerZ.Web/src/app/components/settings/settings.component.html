@@ -168,6 +168,11 @@
           <label for="prof-website">Website / Portfolio URL</label>
           <input type="url" id="prof-website" [(ngModel)]="settings().profile.websiteUrl" placeholder="https://yourportfolio.com" />
         </div>
+
+        <div class="form-group">
+          <label for="prof-address">Header Address (Only Changeable Header Field)</label>
+          <input type="text" id="prof-address" [(ngModel)]="settings().profile.address" placeholder="Wiener Straße 20 / 1, 2442 Unterwaltersdorf" />
+        </div>
       </div>
     }
 

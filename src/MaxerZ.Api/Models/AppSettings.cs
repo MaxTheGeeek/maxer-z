@@ -48,11 +48,19 @@ namespace MaxerZ.Api.Models
 
     public class UserProfile
     {
+        private string _address = "Wiener Straße 20 / 1, 2442 Unterwaltersdorf";
+
         public string FullName { get; set; } = "Majid Behzadi";
         public string Email { get; set; } = "";
         public string Phone { get; set; } = "";
         public string LinkedInUrl { get; set; } = "";
         public string GitHubUrl { get; set; } = "";
         public string WebsiteUrl { get; set; } = "";
+
+        public string Address
+        {
+            get => string.IsNullOrWhiteSpace(_address) ? "Wiener Straße 20 / 1, 2442 Unterwaltersdorf" : _address;
+            set => _address = value;
+        }
     }
 }

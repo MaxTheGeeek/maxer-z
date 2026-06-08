@@ -17,6 +17,7 @@ namespace MaxerZ.Api.Models
         public string UsedProvider { get; set; } = "";
         public string UsedModel { get; set; } = "";
         public string SelectedTemplate { get; set; } = "template_1";
+        public string HeaderAddress { get; set; } = "";
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public string Status { get; set; } = "draft";
     }
