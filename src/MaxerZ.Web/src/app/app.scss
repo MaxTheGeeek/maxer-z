@@ -11,7 +11,7 @@
     .sidebar {
       width: var(--sidebar-collapsed);
     }
-    .brand-title {
+    .brand-logo-container {
       opacity: 0;
       visibility: hidden;
       transform: translateX(-10px);
@@ -78,13 +78,31 @@
     }
   }
 
-  .brand-title {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--accent);
-    letter-spacing: 0.05em;
+  .brand-logo-container {
+    display: flex;
+    align-items: center;
     transition: opacity var(--transition), visibility var(--transition), transform var(--transition);
-    white-space: nowrap;
+    
+    .brand-logo {
+      height: 28px;
+      max-width: 110px;
+      object-fit: contain;
+
+      &.light-logo-only {
+        display: none;
+      }
+    }
+  }
+}
+
+:root[data-theme="light"] {
+  .brand-logo-container .brand-logo {
+    &.dark-logo-only {
+      display: none;
+    }
+    &.light-logo-only {
+      display: block;
+    }
   }
 }
 
