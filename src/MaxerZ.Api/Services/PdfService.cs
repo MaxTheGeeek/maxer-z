@@ -208,6 +208,7 @@ namespace MaxerZ.Api.Services
             var filename = templateName == "template_2" ? "coverletter_template_2.pdf" : "coverletter_template_1.pdf";
             var pathsToTry = new[]
             {
+                Path.Combine(AppContext.BaseDirectory, "..", "Resources", "Templates", filename),
                 Path.Combine(AppContext.BaseDirectory, "Resources", "Templates", filename),
                 Path.Combine(AppContext.BaseDirectory, filename),
                 Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Templates", filename),

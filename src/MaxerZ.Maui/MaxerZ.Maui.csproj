@@ -22,6 +22,7 @@
 
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
 		<ValidateXcodeVersion>false</ValidateXcodeVersion>
+		<ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -52,7 +53,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Update="Resources\Templates\**" CopyToOutputDirectory="PreserveNewest" />
+		<BundleResource Include="Resources\Templates\**" />
 	</ItemGroup>
 
 	<Target Name="RemoveAspNetCoreFrameworkReference" BeforeTargets="ResolveFrameworkReferences">
@@ -60,5 +61,15 @@
 			<FrameworkReference Remove="Microsoft.AspNetCore.App" />
 		</ItemGroup>
 	</Target>
+
+	<Target Name="PublishApiBeforeBuild" BeforeTargets="BeforeBuild">
+		<Exec Command="dotnet publish ../MaxerZ.Api/MaxerZ.Api.csproj -c $(Configuration) -r osx-arm64 --self-contained true" />
+	</Target>
+
+	<ItemGroup>
+		<ReferenceCopyLocalPaths Include="..\MaxerZ.Api\bin\$(Configuration)\net10.0\osx-arm64\publish\*.dll" />
+		<ReferenceCopyLocalPaths Include="..\MaxerZ.Api\bin\$(Configuration)\net10.0\osx-arm64\publish\*.dylib" />
+		<Content Include="..\MaxerZ.Api\bin\$(Configuration)\net10.0\osx-arm64\publish\wwwroot\**" Link="wwwroot\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
 
 </Project>

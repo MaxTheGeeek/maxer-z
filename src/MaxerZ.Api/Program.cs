@@ -22,7 +22,7 @@ namespace MaxerZ.Api
             builder.Services.AddCors(o => o.AddDefaultPolicy(p =>
                 p.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
 
-            builder.Services.AddControllers();
+            builder.Services.AddControllers().AddApplicationPart(typeof(Program).Assembly);
             builder.Services.AddLogging();
 
             // Database setup
@@ -54,6 +54,18 @@ namespace MaxerZ.Api
             builder.Services.AddScoped<TemplateService>();
             builder.Services.AddScoped<McpService>();
 
+            // Determine correct wwwroot path for standard app vs. Mac Catalyst bundle
+            var wwwrootPath = Path.Combine(builder.Environment.ContentRootPath, "wwwroot");
+            if (!Directory.Exists(wwwrootPath))
+            {
+                var resourcesPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "Resources", "wwwroot");
+                if (Directory.Exists(resourcesPath))
+                {
+                    wwwrootPath = resourcesPath;
+                }
+            }
+            builder.Environment.WebRootPath = wwwrootPath;
+
             var app = builder.Build();
 
             // Auto-migrate database on startup
@@ -66,8 +78,7 @@ namespace MaxerZ.Api
             app.UseCors();
             
             // Serve Angular static files from wwwroot or wwwroot/browser in production
-            var wwwrootPath = Path.Combine(builder.Environment.ContentRootPath, "wwwroot");
-            var browserPath = Path.Combine(wwwrootPath, "browser");
+            var browserPath = Path.Combine(builder.Environment.WebRootPath, "browser");
             if (Directory.Exists(browserPath))
             {
                 app.UseDefaultFiles(new DefaultFilesOptions
@@ -77,6 +88,17 @@ namespace MaxerZ.Api
                 app.UseStaticFiles(new StaticFileOptions
                 {
                     FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(browserPath)
+                });
+            }
+            else if (Directory.Exists(builder.Environment.WebRootPath))
+            {
+                app.UseDefaultFiles(new DefaultFilesOptions
+                {
+                    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(builder.Environment.WebRootPath)
+                });
+                app.UseStaticFiles(new StaticFileOptions
+                {
+                    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(builder.Environment.WebRootPath)
                 });
             }
             else
