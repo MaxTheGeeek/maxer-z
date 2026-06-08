@@ -270,8 +270,8 @@ namespace MaxerZ.Api.Services
             string usedModel = "none")
         {
             var cfg = _settings.Get();
-            var company = req.CompanyName;
-            var pos = req.Position;
+            var company = req.CompanyName ?? "";
+            var pos = req.Position ?? "";
 
             if (req.Mode == "existing" && !string.IsNullOrWhiteSpace(req.RawRecipientInfo))
             {
@@ -285,30 +285,61 @@ namespace MaxerZ.Api.Services
                 if (infoLines.Count > 3) pos = infoLines[3];
             }
 
-            var lines = req.CoverLetterBody
+            var bodyText = req.CoverLetterBody ?? "";
+            var lines = bodyText
                 .Split('\n', StringSplitOptions.RemoveEmptyEntries)
                 .Select(l => l.Trim())
                 .Where(l => l.Length > 0)
                 .ToList();
 
-            var salutation = lines.FirstOrDefault(l =>
-                l.StartsWith("Dear", StringComparison.OrdinalIgnoreCase) ||
-                l.StartsWith("Sehr geehrte", StringComparison.OrdinalIgnoreCase) ||
-                l.StartsWith("Sehr geehrter", StringComparison.OrdinalIgnoreCase)) ?? "";
+            var salutation = "";
+            var closing = "";
+            var signer = cfg.Profile.FullName ?? "Majid Behzadi";
+            var body = new List<string>();
 
-            var closing = lines.LastOrDefault(l =>
-                l.Contains("regards", StringComparison.OrdinalIgnoreCase) ||
-                l.Contains("freundlichen", StringComparison.OrdinalIgnoreCase)) ?? "";
+            if (req.Mode != "existing" && lines.Count == 0)
+            {
+                // Generate a professional generic template fallback
+                salutation = (req.Language ?? "en").ToLower() == "de"
+                    ? (!string.IsNullOrWhiteSpace(req.ContactPerson) ? $"Sehr geehrte(r) {req.ContactPerson}," : "Sehr geehrte Damen und Herren,")
+                    : (!string.IsNullOrWhiteSpace(req.ContactPerson) ? $"Dear {req.ContactPerson}," : "Dear Hiring Manager,");
 
-            var signer = lines.LastOrDefault(l =>
-                l.Contains("Behzadi", StringComparison.OrdinalIgnoreCase) ||
-                l.Contains("Majid", StringComparison.OrdinalIgnoreCase)) ?? cfg.Profile.FullName;
+                var bodyParagraph1 = (req.Language ?? "en").ToLower() == "de"
+                    ? $"mit großem Interesse bewerbe ich mich hiermit um die Position als {pos} bei {company}."
+                    : $"I am writing to express my strong interest in the {pos} position at {company}.";
 
-            // Body = everything that is not salutation, closing, or signer
-            var skip = new HashSet<string> { salutation, closing, signer };
-            var body = lines
-                .Where(l => !skip.Contains(l))
-                .ToList();
+                var bodyParagraph2 = (req.Language ?? "en").ToLower() == "de"
+                    ? "Aufgrund meiner fundierten technischen Kenntnisse und meiner praktischen Erfahrung bin ich überzeugt, einen wertvollen Beitrag zu Ihrem Team leisten zu können."
+                    : "With my strong technical background and practical experience, I am confident in my ability to make a valuable contribution to your team.";
+
+                var bodyParagraph3 = (req.Language ?? "en").ToLower() == "de"
+                    ? "Ich freue mich über die Gelegenheit, mich Ihnen in einem persönlichen Gespräch vorzustellen."
+                    : "Thank you for your time and consideration. I look forward to the opportunity to discuss my qualifications further.";
+
+                closing = (req.Language ?? "en").ToLower() == "de" ? "Mit freundlichen Grüßen," : "Best regards,";
+                body = new List<string> { bodyParagraph1, bodyParagraph2, bodyParagraph3 };
+            }
+            else
+            {
+                salutation = lines.FirstOrDefault(l =>
+                    l.StartsWith("Dear", StringComparison.OrdinalIgnoreCase) ||
+                    l.StartsWith("Sehr geehrte", StringComparison.OrdinalIgnoreCase) ||
+                    l.StartsWith("Sehr geehrter", StringComparison.OrdinalIgnoreCase)) ?? "";
+
+                closing = lines.LastOrDefault(l =>
+                    l.Contains("regards", StringComparison.OrdinalIgnoreCase) ||
+                    l.Contains("freundlichen", StringComparison.OrdinalIgnoreCase)) ?? "";
+
+                signer = lines.LastOrDefault(l =>
+                    l.Contains("Behzadi", StringComparison.OrdinalIgnoreCase) ||
+                    l.Contains("Majid", StringComparison.OrdinalIgnoreCase)) ?? (cfg.Profile.FullName ?? "Majid Behzadi");
+
+                // Body = everything that is not salutation, closing, or signer
+                var skip = new HashSet<string> { salutation, closing, signer };
+                body = lines
+                    .Where(l => !skip.Contains(l))
+                    .ToList();
+            }
 
             return new LlmResult
             {
@@ -316,8 +347,8 @@ namespace MaxerZ.Api.Services
                 PositionFormatted = pos,
                 SalutationLine = salutation,
                 BodyParagraphs = body,
-                ClosingLine = closing.Length > 0 ? closing :
-                    (req.Language == "de" ? "Mit freundlichen Grüßen," : "Best regards,"),
+                ClosingLine = !string.IsNullOrEmpty(closing) ? closing :
+                    ((req.Language ?? "en").ToLower() == "de" ? "Mit freundlichen Grüßen," : "Best regards,"),
                 SignerName = signer,
                 UsedProvider = usedProvider,
                 UsedModel = usedModel,

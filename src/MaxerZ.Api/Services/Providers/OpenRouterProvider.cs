@@ -70,12 +70,23 @@ namespace MaxerZ.Api.Services.Providers
                 $"All OpenRouter models exhausted: {lastError?.Message}");
         }
 
+        private static string SanitizeApiKey(string? key)
+        {
+            if (string.IsNullOrWhiteSpace(key)) return "";
+            return key.Trim()
+                .Replace("\r", "")
+                .Replace("\n", "")
+                .Replace("\t", "")
+                .Replace("\u200B", "");
+        }
+
         private async Task<string> TryModelAsync(
             string prompt, string model, AppSettings settings, CancellationToken ct)
         {
             var client = _http.CreateClient("openrouter");
+            var apiKey = SanitizeApiKey(settings.OpenRouterApiKey);
             client.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", settings.OpenRouterApiKey);
+                new AuthenticationHeaderValue("Bearer", apiKey);
             client.DefaultRequestHeaders.Add("HTTP-Referer", "app://maxerz");
             client.DefaultRequestHeaders.Add("X-Title", "MaxerZ");
 

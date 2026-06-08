@@ -23,12 +23,23 @@ namespace MaxerZ.Api.Services.Providers
         public bool IsConfigured(AppSettings s) =>
             !string.IsNullOrWhiteSpace(s.GroqApiKey);
 
+        private static string SanitizeApiKey(string? key)
+        {
+            if (string.IsNullOrWhiteSpace(key)) return "";
+            return key.Trim()
+                .Replace("\r", "")
+                .Replace("\n", "")
+                .Replace("\t", "")
+                .Replace("\u200B", "");
+        }
+
         public async Task<(string response, string modelUsed)> CompleteAsync(
             string prompt, AppSettings settings, CancellationToken ct)
         {
             var client = _http.CreateClient("groq");
+            var apiKey = SanitizeApiKey(settings.GroqApiKey);
             client.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", settings.GroqApiKey);
+                new AuthenticationHeaderValue("Bearer", apiKey);
 
             var body = new
             {

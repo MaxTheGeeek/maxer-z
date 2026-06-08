@@ -103,33 +103,33 @@ namespace MaxerZ.Api.Services
             double currentY = 130;
 
             // 1. Company name (bold, primary color)
-            gfx.DrawString(layout.CompanyNameFormatted, fontCompany, brushPrimary, 42, currentY);
+            gfx.DrawString(layout.CompanyNameFormatted ?? "", fontCompany, brushPrimary, 42, currentY);
             currentY += 14;
 
             // 2. Contact person (regular, secondary color)
             if (!string.IsNullOrWhiteSpace(request.ContactPerson))
             {
-                gfx.DrawString(request.ContactPerson, fontInfo, brushSecondary, 42, currentY);
+                gfx.DrawString(request.ContactPerson ?? "", fontInfo, brushSecondary, 42, currentY);
                 currentY += 12;
             }
 
             // 3. Department (regular, secondary color)
             if (!string.IsNullOrWhiteSpace(request.Department))
             {
-                gfx.DrawString(request.Department, fontInfo, brushSecondary, 42, currentY);
+                gfx.DrawString(request.Department ?? "", fontInfo, brushSecondary, 42, currentY);
                 currentY += 12;
             }
 
             // 4. Company Location (regular, secondary color)
-            gfx.DrawString(request.CompanyLocation, fontInfo, brushSecondary, 42, currentY);
+            gfx.DrawString(request.CompanyLocation ?? "", fontInfo, brushSecondary, 42, currentY);
 
             // 5. Date (drawn on the same line as Company Name, aligned right)
-            var dateSize = gfx.MeasureString(today, fontInfo);
-            gfx.DrawString(today, fontInfo, brushPrimary, 553 - dateSize.Width, 130);
+            var dateSize = gfx.MeasureString(today ?? "", fontInfo);
+            gfx.DrawString(today ?? "", fontInfo, brushPrimary, 553 - dateSize.Width, 130);
 
             // 6. Subject Line / Position (bold, accent color)
             currentY += 35; // Spacing before subject line
-            var posText = layout.PositionFormatted;
+            var posText = layout.PositionFormatted ?? "";
             if (!posText.StartsWith("Betreff", StringComparison.OrdinalIgnoreCase) && 
                 !posText.StartsWith("Bewerbung", StringComparison.OrdinalIgnoreCase) && 
                 !posText.StartsWith("Subject", StringComparison.OrdinalIgnoreCase) && 
@@ -141,13 +141,13 @@ namespace MaxerZ.Api.Services
             var wrappedSubject = WrapText(posText, 511, gfx, fontSubject);
             foreach (var line in wrappedSubject)
             {
-                gfx.DrawString(line, fontSubject, brushAccent, 42, currentY);
+                gfx.DrawString(line ?? "", fontSubject, brushAccent, 42, currentY);
                 currentY += 14;
             }
 
             // 7. Salutation
             currentY += 20;
-            gfx.DrawString(layout.SalutationLine, fontBody, brushPrimary, 42, currentY);
+            gfx.DrawString(layout.SalutationLine ?? "", fontBody, brushPrimary, 42, currentY);
             currentY += 20;
 
             // 8. Body Paragraphs
@@ -161,7 +161,7 @@ namespace MaxerZ.Api.Services
                     {
                         break;
                     }
-                    gfx.DrawString(line, fontBody, brushPrimary, 42, currentY);
+                    gfx.DrawString(line ?? "", fontBody, brushPrimary, 42, currentY);
                     currentY += 15; // Font size 10.5 with line-height
                 }
                 currentY += 10; // Paragraph spacing
@@ -171,14 +171,14 @@ namespace MaxerZ.Api.Services
             currentY += 10;
             if (currentY <= 740)
             {
-                gfx.DrawString(layout.ClosingLine, fontBody, brushPrimary, 42, currentY);
+                gfx.DrawString(layout.ClosingLine ?? "", fontBody, brushPrimary, 42, currentY);
                 currentY += 30;
             }
 
             // 10. Signer Name
             if (currentY <= 740)
             {
-                gfx.DrawString(layout.SignerName, fontSigner, brushPrimary, 42, currentY);
+                gfx.DrawString(layout.SignerName ?? "", fontSigner, brushPrimary, 42, currentY);
             }
 
             // Save PDF to memory stream and return as byte array
@@ -268,14 +268,14 @@ namespace MaxerZ.Api.Services
             double totalWidth = 0;
             foreach (var seg in segments)
             {
-                totalWidth += gfx.MeasureString(seg.Text, seg.Font).Width;
+                totalWidth += gfx.MeasureString(seg.Text ?? "", seg.Font).Width;
             }
 
             double currentX = (595 - totalWidth) / 2.0;
             foreach (var seg in segments)
             {
-                gfx.DrawString(seg.Text, seg.Font, seg.Brush, currentX, y);
-                currentX += gfx.MeasureString(seg.Text, seg.Font).Width;
+                gfx.DrawString(seg.Text ?? "", seg.Font, seg.Brush, currentX, y);
+                currentX += gfx.MeasureString(seg.Text ?? "", seg.Font).Width;
             }
         }
     }

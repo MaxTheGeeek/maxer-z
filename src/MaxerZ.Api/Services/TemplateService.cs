@@ -22,6 +22,7 @@ namespace MaxerZ.Api.Services
             var filename = $"cover_letter_{lang}.json";
             var pathsToTry = new[]
             {
+                Path.Combine(AppContext.BaseDirectory, "..", "Resources", "Templates", filename),
                 Path.Combine(AppContext.BaseDirectory, "Resources", "Templates", filename),
                 Path.Combine(AppContext.BaseDirectory, filename),
                 Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Templates", filename),
@@ -72,6 +73,7 @@ namespace MaxerZ.Api.Services
         {
             var pathsToTry = new[]
             {
+                Path.Combine(AppContext.BaseDirectory, "..", "Resources", "Templates", imageName),
                 Path.Combine(AppContext.BaseDirectory, "Resources", "Templates", imageName),
                 Path.Combine(AppContext.BaseDirectory, imageName),
                 Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Templates", imageName),
