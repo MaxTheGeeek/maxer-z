@@ -34,7 +34,7 @@
 
 	<ItemGroup>
 		<!-- App Icon -->
-		<MauiIcon Include="Resources\AppIcon\maxerz_appicon.svg" Color="#D97757" />
+		<BundleResource Include="Platforms\MacCatalyst\AppIcon.icns" LogicalName="AppIcon.icns" />
 
 		<!-- Splash Screen -->
 		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#1A1A2E" BaseSize="128,128" />

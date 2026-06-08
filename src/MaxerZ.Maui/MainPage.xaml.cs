@@ -16,27 +16,15 @@ public partial class MainPage : ContentPage
 
     private async Task LoadAppAsync()
     {
-        var portFilePath = Path.Combine(Path.GetTempPath(), "maxerz_port.txt");
         var port = 0;
         
-        // Wait up to 10 seconds for the port handshake file to exist
-        for (int i = 0; i < 20; i++)
+        // Wait up to 12 seconds for the active port to be initialized in-process
+        for (int i = 0; i < 24; i++)
         {
-            if (File.Exists(portFilePath))
+            if (MaxerZ.Api.Program.ActivePort > 0)
             {
-                try
-                {
-                    var content = await File.ReadAllTextAsync(portFilePath);
-                    if (int.TryParse(content.Trim(), out var p) && p > 0)
-                    {
-                        port = p;
-                        break;
-                    }
-                }
-                catch
-                {
-                    // File might be locked by write operation, wait and try again
-                }
+                port = MaxerZ.Api.Program.ActivePort;
+                break;
             }
             await Task.Delay(500);
         }

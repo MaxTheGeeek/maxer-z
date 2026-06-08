@@ -13,6 +13,8 @@ namespace MaxerZ.Api
 {
     public class Program
     {
+        public static int ActivePort { get; set; }
+
         public static void Main(string[] args)
         {
             QuestPDF.Settings.License = LicenseType.Community;
@@ -111,6 +113,7 @@ namespace MaxerZ.Api
 
             // Find free port and write to temp file for MAUI to read
             var port = FindFreePort();
+            ActivePort = port;
             var portFilePath = Path.Combine(Path.GetTempPath(), "maxerz_port.txt");
             File.WriteAllText(portFilePath, port.ToString());
 

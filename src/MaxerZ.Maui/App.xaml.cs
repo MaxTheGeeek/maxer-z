@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MaxerZ.Maui;
 
@@ -11,6 +11,16 @@ public partial class App : Application
 
 	protected override Window CreateWindow(IActivationState? activationState)
 	{
-		return new Window(new AppShell());
+		var window = new Window(new AppShell());
+
+		// Set default size
+		window.Width = 1200;
+		window.Height = 800;
+
+		// Set minimum size constraints
+		window.MinimumWidth = 1000;
+		window.MinimumHeight = 700;
+
+		return window;
 	}
 }
