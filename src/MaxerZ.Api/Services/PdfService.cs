@@ -1,9 +1,10 @@
 using System;
 using System.IO;
 using System.Linq;
-using QuestPDF.Fluent;
-using QuestPDF.Helpers;
-using QuestPDF.Infrastructure;
+using System.Collections.Generic;
+using PdfSharpCore.Pdf;
+using PdfSharpCore.Pdf.IO;
+using PdfSharpCore.Drawing;
 using MaxerZ.Api.Models;
 
 namespace MaxerZ.Api.Services
@@ -21,117 +22,125 @@ namespace MaxerZ.Api.Services
 
         public byte[] GeneratePdf(CoverLetterRequest request, LlmResult layout)
         {
+            // Find and load the selected template PDF
+            var templatePath = FindTemplatePdfPath(request.SelectedTemplate);
+            
+            // Open the template PDF using PdfSharpCore
+            using var document = PdfReader.Open(templatePath, PdfDocumentOpenMode.Modify);
+            if (document.PageCount == 0)
+            {
+                throw new InvalidOperationException("The template PDF contains no pages.");
+            }
+
+            // Retrieve the first page to draw text on
+            var page = document.Pages[0];
+            using var gfx = XGraphics.FromPdfPage(page);
+
+            // Define colors matching the JSON template style
+            var brushPrimary = new XSolidBrush(XColor.FromArgb(0x1A, 0x1A, 0x2E));
+            var brushSecondary = new XSolidBrush(XColor.FromArgb(0x55, 0x55, 0x55));
+            var brushAccent = new XSolidBrush(XColor.FromArgb(0x00, 0x6C, 0xA5));
+
+            // Define fonts
+            var fontCompany = new XFont("Arial", 11, XFontStyle.Bold);
+            var fontInfo = new XFont("Arial", 10, XFontStyle.Regular);
+            var fontSubject = new XFont("Arial", 10.5, XFontStyle.Bold);
+            var fontBody = new XFont("Arial", 10.5, XFontStyle.Regular);
+            var fontSigner = new XFont("Arial", 10.5, XFontStyle.Bold);
+
+            // Format the date based on language/template settings
             var tmpl = _templateService.Load(request.Language);
             var culture = (request.Language ?? "en").ToLower() == "de"
                 ? new System.Globalization.CultureInfo("de-AT")
                 : System.Globalization.CultureInfo.InvariantCulture;
             var today = DateTime.Now.ToString(tmpl.DateFormat, culture);
 
-            return Document.Create(container =>
+            // Content placement Y coordinate (below the header logo)
+            double currentY = 130;
+
+            // 1. Company name (bold, primary color)
+            gfx.DrawString(layout.CompanyNameFormatted, fontCompany, brushPrimary, 42, currentY);
+            currentY += 14;
+
+            // 2. Contact person (regular, secondary color)
+            if (!string.IsNullOrWhiteSpace(request.ContactPerson))
             {
-                container.Page(page =>
+                gfx.DrawString(request.ContactPerson, fontInfo, brushSecondary, 42, currentY);
+                currentY += 12;
+            }
+
+            // 3. Department (regular, secondary color)
+            if (!string.IsNullOrWhiteSpace(request.Department))
+            {
+                gfx.DrawString(request.Department, fontInfo, brushSecondary, 42, currentY);
+                currentY += 12;
+            }
+
+            // 4. Company Location (regular, secondary color)
+            gfx.DrawString(request.CompanyLocation, fontInfo, brushSecondary, 42, currentY);
+
+            // 5. Date (drawn on the same line as Company Name, aligned right)
+            var dateSize = gfx.MeasureString(today, fontInfo);
+            gfx.DrawString(today, fontInfo, brushPrimary, 553 - dateSize.Width, 130);
+
+            // 6. Subject Line / Position (bold, accent color)
+            currentY += 35; // Spacing before subject line
+            var posText = layout.PositionFormatted;
+            if (!posText.StartsWith("Betreff", StringComparison.OrdinalIgnoreCase) && 
+                !posText.StartsWith("Bewerbung", StringComparison.OrdinalIgnoreCase) && 
+                !posText.StartsWith("Subject", StringComparison.OrdinalIgnoreCase) && 
+                !posText.StartsWith("Re:", StringComparison.OrdinalIgnoreCase))
+            {
+                posText = request.Language == "de" ? $"Betreff: {posText}" : $"Subject: {posText}";
+            }
+
+            var wrappedSubject = WrapText(posText, 511, gfx, fontSubject);
+            foreach (var line in wrappedSubject)
+            {
+                gfx.DrawString(line, fontSubject, brushAccent, 42, currentY);
+                currentY += 14;
+            }
+
+            // 7. Salutation
+            currentY += 20;
+            gfx.DrawString(layout.SalutationLine, fontBody, brushPrimary, 42, currentY);
+            currentY += 20;
+
+            // 8. Body Paragraphs
+            foreach (var para in layout.BodyParagraphs.Where(p => !string.IsNullOrWhiteSpace(p)))
+            {
+                var wrappedLines = WrapText(para, 511, gfx, fontBody);
+                foreach (var line in wrappedLines)
                 {
-                    page.Size(PageSizes.A4);
-                    page.Margin(0);
+                    // Limit rendering if we overflow the printable area (above the footer)
+                    if (currentY > 740)
+                    {
+                        break;
+                    }
+                    gfx.DrawString(line, fontBody, brushPrimary, 42, currentY);
+                    currentY += 15; // Font size 10.5 with line-height
+                }
+                currentY += 10; // Paragraph spacing
+            }
 
-                    page.Header()
-                        .Height(120)
-                        .Image(_templateService.GetImageBytes(tmpl.HeaderImagePath));
+            // 9. Closing Line
+            currentY += 10;
+            if (currentY <= 740)
+            {
+                gfx.DrawString(layout.ClosingLine, fontBody, brushPrimary, 42, currentY);
+                currentY += 30;
+            }
 
-                    page.Content()
-                        .PaddingHorizontal(42)
-                        .PaddingTop(18)
-                        .PaddingBottom(18)
-                        .Column(col =>
-                        {
-                            col.Spacing(0);
+            // 10. Signer Name
+            if (currentY <= 740)
+            {
+                gfx.DrawString(layout.SignerName, fontSigner, brushPrimary, 42, currentY);
+            }
 
-                            // Company block + Date row
-                            col.Item().Row(row =>
-                            {
-                                row.RelativeItem().Column(left =>
-                                {
-                                    left.Item()
-                                        .Text(layout.CompanyNameFormatted)
-                                        .FontFamily("Helvetica Neue").FontSize(11)
-                                        .Bold().FontColor(Color.FromHex("#1A1A2E"));
-
-                                    if (!string.IsNullOrWhiteSpace(request.ContactPerson))
-                                        left.Item()
-                                            .Text(request.ContactPerson!)
-                                            .FontFamily("Helvetica Neue").FontSize(10)
-                                            .FontColor(Color.FromHex("#555555"));
-
-                                    if (!string.IsNullOrWhiteSpace(request.Department))
-                                        left.Item()
-                                            .Text(request.Department!)
-                                            .FontFamily("Helvetica Neue").FontSize(10)
-                                            .FontColor(Color.FromHex("#555555"));
-
-                                    left.Item()
-                                        .Text(request.CompanyLocation)
-                                        .FontFamily("Helvetica Neue").FontSize(10)
-                                        .FontColor(Color.FromHex("#555555"));
-                                });
-
-                                row.AutoItem().AlignRight()
-                                    .Text(today)
-                                    .FontFamily("Helvetica Neue").FontSize(10)
-                                    .FontColor(Color.FromHex("#444444"));
-                            });
-
-                            col.Item().PaddingTop(18);
-
-                            // Position (sky blue)
-                            col.Item()
-                                .Text($"Re: {layout.PositionFormatted}")
-                                .FontFamily("Helvetica Neue").FontSize(10.5f)
-                                .Bold().FontColor(Color.FromHex("#5BC0F8"));
-
-                            col.Item().PaddingTop(14);
-
-                            // Salutation
-                            col.Item()
-                                .Text(layout.SalutationLine)
-                                .FontFamily("Helvetica Neue").FontSize(10.5f)
-                                .FontColor(Color.FromHex("#1A1A2E"));
-
-                            col.Item().PaddingTop(10);
-
-                            // Body paragraphs
-                            foreach (var para in layout.BodyParagraphs
-                                .Where(p => !string.IsNullOrWhiteSpace(p)))
-                            {
-                                col.Item()
-                                    .Text(para)
-                                    .FontFamily("Helvetica Neue").FontSize(10.5f)
-                                    .LineHeight(1.4f)
-                                    .FontColor(Color.FromHex("#1A1A2E"));
-                                col.Item().PaddingTop(8);
-                            }
-
-                            col.Item().PaddingTop(16);
-
-                            // Closing
-                            col.Item()
-                                .Text(layout.ClosingLine)
-                                .FontFamily("Helvetica Neue").FontSize(10.5f)
-                                .FontColor(Color.FromHex("#1A1A2E"));
-
-                            col.Item().PaddingTop(30);
-
-                            // Signer name
-                            col.Item()
-                                .Text(layout.SignerName)
-                                .FontFamily("Helvetica Neue").FontSize(10.5f)
-                                .Bold().FontColor(Color.FromHex("#1A1A2E"));
-                        });
-
-                    page.Footer()
-                        .Height(80)
-                        .Image(_templateService.GetImageBytes(tmpl.FooterImagePath));
-                });
-            }).GeneratePdf();
+            // Save PDF to memory stream and return as byte array
+            using var ms = new MemoryStream();
+            document.Save(ms);
+            return ms.ToArray();
         }
 
         public string SavePdf(byte[] bytes, string companyName)
@@ -148,6 +157,58 @@ namespace MaxerZ.Api.Services
             var path = Path.Combine(expandedDir, name);
             File.WriteAllBytes(path, bytes);
             return path;
+        }
+
+        private string FindTemplatePdfPath(string templateName)
+        {
+            var filename = templateName == "template_2" ? "coverletter_template_2.pdf" : "coverletter_template_1.pdf";
+            var pathsToTry = new[]
+            {
+                Path.Combine(AppContext.BaseDirectory, "Resources", "Templates", filename),
+                Path.Combine(AppContext.BaseDirectory, filename),
+                Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Templates", filename),
+                Path.Combine(Directory.GetCurrentDirectory(), "src", "MaxerZ.Maui", "Resources", "Templates", filename),
+                Path.Combine(Directory.GetCurrentDirectory(), "..", "MaxerZ.Maui", "Resources", "Templates", filename)
+            };
+
+            foreach (var path in pathsToTry)
+            {
+                if (File.Exists(path))
+                {
+                    return path;
+                }
+            }
+
+            throw new FileNotFoundException($"Template PDF file {filename} not found.");
+        }
+
+        private List<string> WrapText(string text, double maxWidth, XGraphics gfx, XFont font)
+        {
+            var words = text.Split(' ');
+            var lines = new List<string>();
+            var currentLine = "";
+
+            foreach (var word in words)
+            {
+                var testLine = string.IsNullOrEmpty(currentLine) ? word : currentLine + " " + word;
+                var size = gfx.MeasureString(testLine, font);
+                if (size.Width > maxWidth)
+                {
+                    lines.Add(currentLine);
+                    currentLine = word;
+                }
+                else
+                {
+                    currentLine = testLine;
+                }
+            }
+
+            if (!string.IsNullOrEmpty(currentLine))
+            {
+                lines.Add(currentLine);
+            }
+
+            return lines;
         }
     }
 }

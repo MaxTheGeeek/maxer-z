@@ -30,7 +30,8 @@ export class SettingsComponent implements OnInit {
       email: '',
       phone: '',
       linkedInUrl: '',
-      gitHubUrl: ''
+      gitHubUrl: '',
+      websiteUrl: ''
     }
   });
 

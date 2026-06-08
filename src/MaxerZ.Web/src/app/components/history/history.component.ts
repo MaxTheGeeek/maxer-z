@@ -51,12 +51,14 @@ export class HistoryComponent implements OnInit {
 
     // Reconstruct the request payload
     const request: CoverLetterRequest = {
+      mode: 'existing',
       companyName: rec.companyName,
       position: rec.position,
       contactPerson: rec.contactPerson,
       department: rec.department,
       companyLocation: rec.companyLocation,
       language: rec.language,
+      selectedTemplate: rec.selectedTemplate || 'template_1',
       coverLetterBody: rec.contentBody // Use history body as prompt
     };
 

@@ -61,20 +61,21 @@ namespace MaxerZ.Api.Controllers
 
             var layout = await _llm.ValidateAndLayoutAsync(req, ct);
             var pdfBytes = _pdf.GeneratePdf(req, layout);
-            var pdfPath = _pdf.SavePdf(pdfBytes, req.CompanyName);
+            var pdfPath = _pdf.SavePdf(pdfBytes, layout.CompanyNameFormatted);
 
             var record = new CoverLetterRecord
             {
-                CompanyName = req.CompanyName,
-                ContactPerson = req.ContactPerson,
+                CompanyName = layout.CompanyNameFormatted,
+                ContactPerson = req.ContactPerson ?? layout.SalutationLine,
                 Department = req.Department,
                 CompanyLocation = req.CompanyLocation,
-                Position = req.Position,
+                Position = layout.PositionFormatted,
                 Language = req.Language,
-                ContentBody = req.CoverLetterBody,
+                ContentBody = string.Join("\n\n", layout.BodyParagraphs),
                 PdfPath = pdfPath,
                 UsedProvider = layout.UsedProvider,
                 UsedModel = layout.UsedModel,
+                SelectedTemplate = req.SelectedTemplate,
                 Status = "exported"
             };
 

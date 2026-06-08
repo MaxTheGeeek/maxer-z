@@ -53,5 +53,6 @@ namespace MaxerZ.Api.Models
         public string Phone { get; set; } = "";
         public string LinkedInUrl { get; set; } = "";
         public string GitHubUrl { get; set; } = "";
+        public string WebsiteUrl { get; set; } = "";
     }
 }

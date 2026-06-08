@@ -4,6 +4,7 @@ export interface UserProfile {
   phone: string;
   linkedInUrl: string;
   gitHubUrl: string;
+  websiteUrl: string;
 }
 
 export interface AppSettings {
@@ -26,12 +27,16 @@ export interface McpConfig {
 }
 
 export interface CoverLetterRequest {
+  mode: string; // 'existing' | 'generate'
+  rawRecipientInfo?: string;
+  jobDescription?: string;
   companyName: string;
   position: string;
   contactPerson?: string;
   department?: string;
   companyLocation: string;
   language: string;
+  selectedTemplate: string; // 'template_1' | 'template_2'
   coverLetterBody: string;
 }
 
@@ -49,6 +54,7 @@ export interface CoverLetterRecord {
   status: string;
   usedProvider: string;
   usedModel: string;
+  selectedTemplate: string;
   syncedToMcp: boolean;
 }
 

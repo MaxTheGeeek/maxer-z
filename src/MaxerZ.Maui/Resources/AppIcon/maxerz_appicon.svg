@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="field" x1="0" y1="0" x2="0.55" y2="1">
+      <stop offset="0" stop-color="#E0875F"></stop>
+      <stop offset="0.5" stop-color="#D97757"></stop>
+      <stop offset="1" stop-color="#C2613F"></stop>
+    </linearGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.22"></stop>
+      <stop offset="0.45" stop-color="#ffffff" stop-opacity="0"></stop>
+    </linearGradient>
+    <linearGradient id="zfill" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#FBF7F0"></stop>
+      <stop offset="1" stop-color="#EFE2D2"></stop>
+    </linearGradient>
+  </defs>
+
+  
+  <path d="M240 40 L784 40 C894 40 984 130 984 240 L984 784 C984 894 894 984 784 984 L240 984 C130 984 40 894 40 784 L40 240 C40 130 130 40 240 40 Z" fill="url(#field)"></path>
+  <path d="M240 40 L784 40 C894 40 984 130 984 240 L984 784 C984 894 894 984 784 984 L240 984 C130 984 40 894 40 784 L40 240 C40 130 130 40 240 40 Z" fill="url(#sheen)"></path>
+
+  
+  <g transform="translate(112,112) scale(8)">
+    <g transform="translate(50,50) skewX(-9) translate(-50,-50)">
+      <path d="M18,18 L82,18 L82,39.8 L47.4,60.2 L82,60.2 L82,82 L18,82 L18,60.2 L52.6,39.8 L18,39.8 Z" fill="url(#zfill)" stroke="#FBF7F0" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"></path>
+      <path d="M82,39.8 L47.4,60.2" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" opacity="0.55"></path>
+    </g>
+  </g>
+</svg>

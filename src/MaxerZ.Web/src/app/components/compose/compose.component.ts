@@ -13,17 +13,26 @@ import { CoverLetterRequest } from '../../models/models';
   styleUrl: './compose.component.scss'
 })
 export class ComposeComponent implements OnInit {
-  // Form fields
+  // Tabs selection: 'existing' (My Cover Letter) | 'generate' (AI Generation)
+  activeOption = signal('existing');
+  
+  // Option 1: My Cover Letter fields
+  rawRecipientInfo = signal('');
+  existingCoverLetterBody = signal('');
+
+  // Option 2: AI Generation fields
   companyName = signal('');
   position = signal('');
   contactPerson = signal('');
   department = signal('');
   companyLocation = signal('');
   language = signal('en');
-  coverLetterBody = signal(''); // Holds job description / prompt details
+  selectedTemplate = signal('template_1'); // 'template_1' | 'template_2'
+  coverLetterBody = signal(''); // Holds custom instructions / context
+  jobDescription = signal(''); // Holds raw job post
 
   // Dynamic placeholders
-  bodyPlaceholder = signal('Paste the job posting requirements and description here...');
+  bodyPlaceholder = signal('Highlight specific skills or background details for generation...');
 
   // Active provider status
   activeProviders = signal<string[]>([]);
@@ -50,13 +59,21 @@ export class ComposeComponent implements OnInit {
   loadDraftOrProfile() {
     const draft = this.coverLetterService.getComposeState();
     if (draft) {
+      this.activeOption.set(draft.mode || 'existing');
+      if (draft.mode === 'existing') {
+        this.rawRecipientInfo.set(draft.rawRecipientInfo || '');
+        this.existingCoverLetterBody.set(draft.coverLetterBody || '');
+      } else {
+        this.jobDescription.set(draft.jobDescription || '');
+        this.coverLetterBody.set(draft.coverLetterBody || '');
+      }
       this.companyName.set(draft.companyName || '');
       this.position.set(draft.position || '');
       this.contactPerson.set(draft.contactPerson || '');
       this.department.set(draft.department || '');
       this.companyLocation.set(draft.companyLocation || '');
       this.language.set(draft.language || 'en');
-      this.coverLetterBody.set(draft.coverLetterBody || '');
+      this.selectedTemplate.set(draft.selectedTemplate || 'template_1');
       this.updatePlaceholder(draft.language || 'en');
     }
   }
@@ -86,32 +103,69 @@ export class ComposeComponent implements OnInit {
 
   updatePlaceholder(lang: string) {
     if (lang === 'de') {
-      this.bodyPlaceholder.set('Fügen Sie hier die Beschreibung und die Anforderungen der Stellenausschreibung ein...');
+      this.bodyPlaceholder.set('Heben Sie bestimmte Fähigkeiten oder Hintergrundinformationen hervor...');
     } else {
-      this.bodyPlaceholder.set('Paste the job posting requirements and description here...');
+      this.bodyPlaceholder.set('Highlight specific skills or background details for generation...');
     }
+  }
+
+  setOption(opt: string) {
+    this.activeOption.set(opt);
+    this.formError.set(null);
   }
 
   generate() {
     this.formError.set(null);
 
-    // Validate inputs
-    if (!this.companyName().trim() || !this.position().trim() || !this.companyLocation().trim() || !this.coverLetterBody().trim()) {
-      this.formError.set('Please fill out all required fields marked with *');
-      return;
+    let request: CoverLetterRequest;
+
+    if (this.activeOption() === 'existing') {
+      // Validate Option 1: My Cover Letter
+      if (!this.rawRecipientInfo().trim()) {
+        this.formError.set('Please provide the Job & Recipient Information block.');
+        return;
+      }
+      if (!this.existingCoverLetterBody().trim()) {
+        this.formError.set('Please paste your existing cover letter content.');
+        return;
+      }
+
+      request = {
+        mode: 'existing',
+        rawRecipientInfo: this.rawRecipientInfo().trim(),
+        companyName: '', // Extracted by backend LLM
+        position: '',    // Extracted by backend LLM
+        companyLocation: '', // Extracted by backend LLM
+        language: this.language(),
+        selectedTemplate: this.selectedTemplate(),
+        coverLetterBody: this.existingCoverLetterBody().trim()
+      };
+    } else {
+      // Validate Option 2: AI Generation
+      if (!this.companyName().trim() || !this.position().trim() || !this.companyLocation().trim()) {
+        this.formError.set('Please fill out all required fields marked with *');
+        return;
+      }
+      if (!this.jobDescription().trim()) {
+        this.formError.set('Please paste the job description or requirements.');
+        return;
+      }
+
+      request = {
+        mode: 'generate',
+        companyName: this.companyName().trim(),
+        position: this.position().trim(),
+        contactPerson: this.contactPerson().trim() || undefined,
+        department: this.department().trim() || undefined,
+        companyLocation: this.companyLocation().trim(),
+        language: this.language(),
+        selectedTemplate: this.selectedTemplate(),
+        jobDescription: this.jobDescription().trim(),
+        coverLetterBody: this.coverLetterBody().trim()
+      };
     }
 
-    const request: CoverLetterRequest = {
-      companyName: this.companyName().trim(),
-      position: this.position().trim(),
-      contactPerson: this.contactPerson().trim() || undefined,
-      department: this.department().trim() || undefined,
-      companyLocation: this.companyLocation().trim(),
-      language: this.language(),
-      coverLetterBody: this.coverLetterBody().trim()
-    };
-
-    // Save current compose state as a draft in case user navigates back
+    // Save current compose state as a draft
     this.coverLetterService.setComposeState(request);
 
     this.isGenerating.set(true);
@@ -135,7 +189,7 @@ export class ComposeComponent implements OnInit {
       error: (err) => {
         clearInterval(logInterval);
         console.error('Generation failed:', err);
-        const errMsg = err.error?.error || err.message || 'Cascading orchestrator could not generate text. Ensure you have configured at least one LLM API key.';
+        const errMsg = err.error?.error || err.message || 'Cascading orchestrator could not process the cover letter. Ensure you have configured at least one LLM API key.';
         this.progressLogs.update(logs => [...logs, `✗ Error: ${errMsg}`]);
         this.formError.set(errMsg);
         this.isGenerating.set(false);
@@ -160,13 +214,17 @@ export class ComposeComponent implements OnInit {
   }
 
   clearForm() {
+    this.rawRecipientInfo.set('');
+    this.existingCoverLetterBody.set('');
     this.companyName.set('');
     this.position.set('');
     this.contactPerson.set('');
     this.department.set('');
     this.companyLocation.set('');
     this.language.set('en');
+    this.selectedTemplate.set('template_1');
     this.coverLetterBody.set('');
+    this.jobDescription.set('');
     this.updatePlaceholder('en');
     this.formError.set(null);
     this.coverLetterService.setComposeState(null);
