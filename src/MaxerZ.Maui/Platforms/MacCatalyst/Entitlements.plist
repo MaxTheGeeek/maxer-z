@@ -12,6 +12,9 @@
         <!-- Required to run the in-process ASP.NET Core backend web server. -->
         <key>com.apple.security.network.server</key>
         <true/>
+        <!-- Required to let the user select paths to save files outside the sandbox. -->
+        <key>com.apple.security.files.user-selected.read-write</key>
+        <true/>
     </dict>
 </plist>
 

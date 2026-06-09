@@ -187,8 +187,17 @@ namespace MaxerZ.Api.Services
             return ms.ToArray();
         }
 
-        public string SavePdf(byte[] bytes, string companyName)
+        public async Task<string?> SavePdfAsync(byte[] bytes, string companyName)
         {
+            var safe = string.Concat(companyName.Split(Path.GetInvalidFileNameChars()));
+            var name = $"CoverLetter_{safe}_{DateTime.Now:yyyyMMdd}.pdf";
+
+            if (FileSaveDialogHelper.SaveFileDialogAsync != null)
+            {
+                var chosenPath = await FileSaveDialogHelper.SaveFileDialogAsync(name, bytes);
+                return chosenPath; // returns null if cancelled
+            }
+
             var cfg = _settings.Get();
             var dir = cfg.ExportDirectory
                 .Replace("~", Environment.GetFolderPath(
@@ -196,8 +205,6 @@ namespace MaxerZ.Api.Services
             var expandedDir = Environment.ExpandEnvironmentVariables(dir);
             Directory.CreateDirectory(expandedDir);
 
-            var safe = string.Concat(companyName.Split(Path.GetInvalidFileNameChars()));
-            var name = $"CoverLetter_{safe}_{DateTime.Now:yyyyMMdd}.pdf";
             var path = Path.Combine(expandedDir, name);
             File.WriteAllBytes(path, bytes);
             return path;
@@ -278,5 +285,10 @@ namespace MaxerZ.Api.Services
                 currentX += gfx.MeasureString(seg.Text ?? "", seg.Font).Width;
             }
         }
+    }
+
+    public static class FileSaveDialogHelper
+    {
+        public static Func<string, byte[], Task<string?>>? SaveFileDialogAsync { get; set; }
     }
 }

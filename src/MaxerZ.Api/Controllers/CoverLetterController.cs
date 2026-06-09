@@ -61,7 +61,11 @@ namespace MaxerZ.Api.Controllers
 
             var layout = await _llm.ValidateAndLayoutAsync(req, ct);
             var pdfBytes = _pdf.GeneratePdf(req, layout);
-            var pdfPath = _pdf.SavePdf(pdfBytes, layout.CompanyNameFormatted);
+            var pdfPath = await _pdf.SavePdfAsync(pdfBytes, layout.CompanyNameFormatted);
+            if (pdfPath == null)
+            {
+                return BadRequest(new { error = "Export cancelled by user." });
+            }
 
             var record = new CoverLetterRecord
             {
