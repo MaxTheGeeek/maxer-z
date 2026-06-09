@@ -76,7 +76,7 @@
 	<ItemGroup>
 		<ReferenceCopyLocalPaths Include="..\MaxerZ.Api\bin\$(Configuration)\net10.0\osx-arm64\publish\*.dll" />
 		<ReferenceCopyLocalPaths Include="..\MaxerZ.Api\bin\$(Configuration)\net10.0\osx-arm64\publish\*.dylib" />
-		<Content Include="..\MaxerZ.Api\bin\$(Configuration)\net10.0\osx-arm64\publish\wwwroot\**" Link="wwwroot\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+		<Content Include="..\MaxerZ.Api\wwwroot\**" Link="wwwroot\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="Always" />
 	</ItemGroup>
 
 </Project>
