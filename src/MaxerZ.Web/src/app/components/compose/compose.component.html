@@ -66,8 +66,9 @@
           <div class="form-group flex-1">
             <label for="letter-temp-1">PDF Template *</label>
             <select id="letter-temp-1" [ngModel]="selectedTemplate()" (ngModelChange)="selectedTemplate.set($event)">
-              <option value="template_1">Template 1 (Professional Classic)</option>
-              <option value="template_2">Template 2 (Modern Minimalist)</option>
+              @for (temp of templates(); track temp.id) {
+                <option [value]="temp.id">{{ temp.name }}</option>
+              }
             </select>
           </div>
         </div>
@@ -151,8 +152,9 @@
           <div class="form-group flex-1">
             <label for="letter-temp-2">PDF Template *</label>
             <select id="letter-temp-2" [ngModel]="selectedTemplate()" (ngModelChange)="selectedTemplate.set($event)">
-              <option value="template_1">Template 1 (Professional Classic)</option>
-              <option value="template_2">Template 2 (Modern Minimalist)</option>
+              @for (temp of templates(); track temp.id) {
+                <option [value]="temp.id">{{ temp.name }}</option>
+              }
             </select>
           </div>
         </div>

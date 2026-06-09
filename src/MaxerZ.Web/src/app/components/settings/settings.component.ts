@@ -57,6 +57,10 @@ export class SettingsComponent implements OnInit {
   // Available priority options
   allProviders = ['OpenRouter', 'Groq', 'Ollama', 'RawFallback'];
 
+  templatesList = signal<any[]>([]);
+  uploadProgress = signal<string | null>(null);
+  uploadError = signal<string | null>(null);
+
   constructor(
     private settingsService: SettingsService,
     private route: ActivatedRoute
@@ -69,6 +73,57 @@ export class SettingsComponent implements OnInit {
       }
     });
     this.loadSettings();
+    this.loadTemplatesList();
+  }
+
+  loadTemplatesList() {
+    this.settingsService.getTemplates().subscribe({
+      next: (list) => {
+        this.templatesList.set(list);
+      },
+      error: (err) => {
+        console.error('Failed to load templates list:', err);
+      }
+    });
+  }
+
+  onTemplateFileSelected(event: any) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== 'application/pdf' && !file.name.endsWith('.pdf')) {
+      this.uploadError.set('Only PDF files are allowed.');
+      return;
+    }
+
+    this.uploadError.set(null);
+    this.uploadProgress.set('Uploading...');
+    this.settingsService.uploadTemplate(file).subscribe({
+      next: () => {
+        this.uploadProgress.set('Upload successful!');
+        this.loadTemplatesList();
+        setTimeout(() => this.uploadProgress.set(null), 3000);
+      },
+      error: (err) => {
+        console.error('Upload failed:', err);
+        this.uploadError.set(err.error || 'Upload failed.');
+        this.uploadProgress.set(null);
+      }
+    });
+  }
+
+  deleteTemplate(id: string) {
+    if (confirm('Are you sure you want to delete this template?')) {
+      this.settingsService.deleteTemplate(id).subscribe({
+        next: () => {
+          this.loadTemplatesList();
+        },
+        error: (err) => {
+          console.error('Failed to delete template:', err);
+          alert(err.error || 'Failed to delete template.');
+        }
+      });
+    }
   }
 
   loadSettings() {

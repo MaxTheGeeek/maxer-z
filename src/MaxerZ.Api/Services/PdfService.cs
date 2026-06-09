@@ -234,6 +234,19 @@ namespace MaxerZ.Api.Services
 
         private string FindTemplatePdfPath(string templateName)
         {
+            if (!string.IsNullOrEmpty(templateName))
+            {
+                var customDir = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                    "MaxerZ", "Templates");
+                var sanitizedName = Path.GetFileName(templateName);
+                var customPath = Path.Combine(customDir, sanitizedName);
+                if (File.Exists(customPath))
+                {
+                    return customPath;
+                }
+            }
+
             var filename = templateName == "template_2" ? "coverletter_template_2.pdf" : "coverletter_template_1.pdf";
             var pathsToTry = new[]
             {

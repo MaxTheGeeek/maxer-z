@@ -43,4 +43,18 @@ export class SettingsService {
     return this.http.post<{ success: boolean }>(
       `${this.base}/test-mcp`, {});
   }
+
+  getTemplates() {
+    return this.http.get<any[]>(`${this.base}/templates`);
+  }
+
+  uploadTemplate(file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<any>(`${this.base}/templates/upload`, formData);
+  }
+
+  deleteTemplate(id: string) {
+    return this.http.delete<any>(`${this.base}/templates/${id}`);
+  }
 }

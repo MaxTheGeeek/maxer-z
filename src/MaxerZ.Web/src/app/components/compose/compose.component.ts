@@ -29,6 +29,7 @@ export class ComposeComponent implements OnInit {
   companyLocation = signal('');
   language = signal('en');
   selectedTemplate = signal('template_1'); // 'template_1' | 'template_2'
+  templates = signal<any[]>([]);
   coverLetterBody = signal(''); // Holds custom instructions / context
   jobDescription = signal(''); // Holds raw job post
 
@@ -55,6 +56,22 @@ export class ComposeComponent implements OnInit {
   ngOnInit() {
     this.loadDraftOrProfile();
     this.loadActiveProviders();
+    this.loadTemplates();
+  }
+
+  loadTemplates() {
+    this.settingsService.getTemplates().subscribe({
+      next: (data) => {
+        this.templates.set(data);
+      },
+      error: (err) => {
+        console.error('Failed to load templates:', err);
+        this.templates.set([
+          { id: 'template_1', name: 'Template 1 (Professional Classic)', isCustom: false },
+          { id: 'template_2', name: 'Template 2 (Modern Minimalist)', isCustom: false }
+        ]);
+      }
+    });
   }
 
   loadDraftOrProfile() {

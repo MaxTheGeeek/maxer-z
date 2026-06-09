@@ -194,5 +194,81 @@ namespace MaxerZ.Api.Controllers
             var ok = await mcp.SaveCoverLetterAsync(test);
             return Ok(new { success = ok });
         }
+
+        [HttpGet("templates")]
+        public IActionResult GetTemplates()
+        {
+            var list = new List<object>
+            {
+                new { id = "template_1", name = "Template 1 (Professional Classic)", isCustom = false },
+                new { id = "template_2", name = "Template 2 (Modern Minimalist)", isCustom = false }
+            };
+
+            var dir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "MaxerZ", "Templates");
+
+            if (Directory.Exists(dir))
+            {
+                var files = Directory.GetFiles(dir, "*.pdf");
+                foreach (var file in files)
+                {
+                    var filename = Path.GetFileName(file);
+                    list.Add(new
+                    {
+                        id = filename,
+                        name = Path.GetFileNameWithoutExtension(filename),
+                        isCustom = true
+                    });
+                }
+            }
+
+            return Ok(list);
+        }
+
+        [HttpPost("templates/upload")]
+        public async Task<IActionResult> UploadTemplate([FromForm] Microsoft.AspNetCore.Http.IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest("No file uploaded.");
+
+            if (Path.GetExtension(file.FileName).ToLower() != ".pdf")
+                return BadRequest("Only PDF files are allowed as templates.");
+
+            var dir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "MaxerZ", "Templates");
+
+            Directory.CreateDirectory(dir);
+
+            var filePath = Path.Combine(dir, file.FileName);
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            return Ok(new { success = true });
+        }
+
+        [HttpDelete("templates/{id}")]
+        public IActionResult DeleteTemplate(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id) || id == "template_1" || id == "template_2")
+                return BadRequest("Invalid template ID.");
+
+            var dir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "MaxerZ", "Templates");
+
+            var filename = Path.GetFileName(id);
+            var filePath = Path.Combine(dir, filename);
+            if (System.IO.File.Exists(filePath))
+            {
+                System.IO.File.Delete(filePath);
+                return Ok(new { success = true });
+            }
+
+            return NotFound("Template not found.");
+        }
     }
 }
