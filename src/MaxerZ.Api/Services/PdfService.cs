@@ -85,6 +85,10 @@ namespace MaxerZ.Api.Services
                 new TextSegment { Text = " | " + addressText, Font = headerInfoFont, Brush = brushHeaderDark }
             );
 
+            // Draw a blue divider line under the header
+            var penAccent = new XPen(XColor.FromArgb(0x00, 0x6C, 0xA5), 1.5);
+            gfx.DrawLine(penAccent, 42, 112, 553, 112);
+
             // Define standard layout fonts
             var fontCompany = new XFont("Arial", 11, XFontStyle.Bold);
             var fontInfo = new XFont("Arial", 10, XFontStyle.Regular);
@@ -103,33 +107,51 @@ namespace MaxerZ.Api.Services
             double currentY = 130;
 
             // 1. Company name (bold, primary color)
-            gfx.DrawString(layout.CompanyNameFormatted ?? "", fontCompany, brushPrimary, 42, currentY);
+            var companyName = !string.IsNullOrWhiteSpace(layout.CompanyNameFormatted) 
+                ? layout.CompanyNameFormatted 
+                : (!string.IsNullOrWhiteSpace(request.CompanyName) ? request.CompanyName : "");
+            gfx.DrawString(companyName, fontCompany, brushPrimary, 42, currentY);
             currentY += 14;
 
             // 2. Contact person (regular, secondary color)
-            if (!string.IsNullOrWhiteSpace(request.ContactPerson))
+            var contactPerson = !string.IsNullOrWhiteSpace(request.ContactPerson) 
+                ? request.ContactPerson 
+                : (!string.IsNullOrWhiteSpace(layout.ContactPerson) ? layout.ContactPerson : "");
+            if (!string.IsNullOrWhiteSpace(contactPerson))
             {
-                gfx.DrawString(request.ContactPerson ?? "", fontInfo, brushSecondary, 42, currentY);
+                gfx.DrawString(contactPerson, fontInfo, brushSecondary, 42, currentY);
                 currentY += 12;
             }
 
             // 3. Department (regular, secondary color)
-            if (!string.IsNullOrWhiteSpace(request.Department))
+            var department = !string.IsNullOrWhiteSpace(request.Department) 
+                ? request.Department 
+                : (!string.IsNullOrWhiteSpace(layout.Department) ? layout.Department : "");
+            if (!string.IsNullOrWhiteSpace(department))
             {
-                gfx.DrawString(request.Department ?? "", fontInfo, brushSecondary, 42, currentY);
+                gfx.DrawString(department, fontInfo, brushSecondary, 42, currentY);
                 currentY += 12;
             }
 
             // 4. Company Location (regular, secondary color)
-            gfx.DrawString(request.CompanyLocation ?? "", fontInfo, brushSecondary, 42, currentY);
+            var companyLocation = !string.IsNullOrWhiteSpace(request.CompanyLocation) 
+                ? request.CompanyLocation 
+                : (!string.IsNullOrWhiteSpace(layout.CompanyLocation) ? layout.CompanyLocation : "");
+            if (!string.IsNullOrWhiteSpace(companyLocation))
+            {
+                gfx.DrawString(companyLocation, fontInfo, brushSecondary, 42, currentY);
+                currentY += 12;
+            }
 
             // 5. Date (drawn on the same line as Company Name, aligned right)
             var dateSize = gfx.MeasureString(today ?? "", fontInfo);
             gfx.DrawString(today ?? "", fontInfo, brushPrimary, 553 - dateSize.Width, 130);
 
             // 6. Subject Line / Position (bold, accent color)
-            currentY += 35; // Spacing before subject line
-            var posText = layout.PositionFormatted ?? "";
+            currentY += 23; // Spacing before subject line
+            var posText = !string.IsNullOrWhiteSpace(layout.PositionFormatted)
+                ? layout.PositionFormatted
+                : (!string.IsNullOrWhiteSpace(request.Position) ? request.Position : "");
             if (!posText.StartsWith("Betreff", StringComparison.OrdinalIgnoreCase) && 
                 !posText.StartsWith("Bewerbung", StringComparison.OrdinalIgnoreCase) && 
                 !posText.StartsWith("Subject", StringComparison.OrdinalIgnoreCase) && 

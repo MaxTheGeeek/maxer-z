@@ -14,6 +14,9 @@ namespace MaxerZ.Api.Models
         public List<string> BodyParagraphs { get; set; } = new();
         public string ClosingLine { get; set; } = "";
         public string SignerName { get; set; } = "";
+        public string CompanyLocation { get; set; } = "";
+        public string ContactPerson { get; set; } = "";
+        public string Department { get; set; } = "";
 
         // Audit trail — which provider/model actually produced this
         public string UsedProvider { get; set; } = "fallback";

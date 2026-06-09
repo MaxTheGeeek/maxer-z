@@ -37,8 +37,36 @@ namespace MaxerZ.Api.Services
                     try
                     {
                         var json = File.ReadAllText(path);
-                        var template = JsonSerializer.Deserialize<Template>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                        if (template != null) return template;
+                        using var doc = JsonDocument.Parse(json);
+                        var root = doc.RootElement;
+                        var template = new Template();
+
+                        if (root.TryGetProperty("language", out var langProp))
+                            template.Language = langProp.GetString() ?? "";
+
+                        if (root.TryGetProperty("header", out var headerProp) && headerProp.TryGetProperty("imagePath", out var headerPathProp))
+                            template.HeaderImagePath = headerPathProp.GetString() ?? "";
+
+                        if (root.TryGetProperty("footer", out var footerProp) && footerProp.TryGetProperty("imagePath", out var footerPathProp))
+                            template.FooterImagePath = footerPathProp.GetString() ?? "";
+
+                        if (root.TryGetProperty("formatting", out var formattingProp))
+                        {
+                            if (formattingProp.TryGetProperty("dateFormat", out var dateProp))
+                                template.DateFormat = dateProp.GetString() ?? "";
+                            if (formattingProp.TryGetProperty("salutationPrefix", out var salProp))
+                                template.SalutationPrefix = salProp.GetString() ?? "";
+                            if (formattingProp.TryGetProperty("closingLine", out var closeProp))
+                                template.ClosingLine = closeProp.GetString() ?? "";
+                        }
+
+                        // Ensure DateFormat has a value from JSON or fallback to requested default format
+                        if (string.IsNullOrWhiteSpace(template.DateFormat))
+                        {
+                            template.DateFormat = template.Language.ToLower() == "de" ? "dd. MMMM yyyy" : "dd MMMM yyyy";
+                        }
+
+                        return template;
                     }
                     catch { /* ignore and try next path */ }
                 }
@@ -52,7 +80,7 @@ namespace MaxerZ.Api.Services
                     Language = "de",
                     HeaderImagePath = "header_de.png",
                     FooterImagePath = "footer_de.png",
-                    DateFormat = "d. MMMM yyyy",
+                    DateFormat = "dd. MMMM yyyy",
                     SalutationPrefix = "Sehr geehrte",
                     ClosingLine = "Mit freundlichen Grüßen,"
                 };
@@ -63,7 +91,7 @@ namespace MaxerZ.Api.Services
                 Language = "en",
                 HeaderImagePath = "header_en.png",
                 FooterImagePath = "footer_en.png",
-                DateFormat = "MMMM d, yyyy",
+                DateFormat = "dd MMMM yyyy",
                 SalutationPrefix = "Dear",
                 ClosingLine = "Best regards,"
             };

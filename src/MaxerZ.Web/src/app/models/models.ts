@@ -69,6 +69,9 @@ export interface LlmResult {
     bodyParagraphs: string[];
     closingLine: string;
     signerName: string;
+    companyLocation: string;
+    contactPerson: string;
+    department: string;
   };
   pdfBase64?: string;
   pdfPath?: string;

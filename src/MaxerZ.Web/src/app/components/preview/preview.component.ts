@@ -109,7 +109,17 @@ export class PreviewComponent implements OnInit {
     // Pack edited fields into the coverLetterBody to persist it
     const updatedRequest: CoverLetterRequest = {
       ...req,
+      companyName: req.companyName || res.layout.companyNameFormatted,
+      position: req.position || res.layout.positionFormatted,
+      companyLocation: req.companyLocation || res.layout.companyLocation,
+      contactPerson: req.contactPerson || res.layout.contactPerson,
+      department: req.department || res.layout.department,
       coverLetterBody: JSON.stringify({
+        companyNameFormatted: res.layout.companyNameFormatted,
+        positionFormatted: res.layout.positionFormatted,
+        companyLocation: res.layout.companyLocation,
+        contactPerson: res.layout.contactPerson,
+        department: res.layout.department,
         salutationLine: this.salutationLine().trim(),
         bodyParagraphs: paragraphs,
         closingLine: this.closingLine().trim(),

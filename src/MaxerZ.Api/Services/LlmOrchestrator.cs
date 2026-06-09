@@ -57,6 +57,12 @@ namespace MaxerZ.Api.Services
                             parsed.CompanyNameFormatted = request.CompanyName;
                         if (string.IsNullOrEmpty(parsed.PositionFormatted))
                             parsed.PositionFormatted = request.Position;
+                        if (string.IsNullOrEmpty(parsed.CompanyLocation))
+                            parsed.CompanyLocation = request.CompanyLocation;
+                        if (string.IsNullOrEmpty(parsed.ContactPerson))
+                            parsed.ContactPerson = request.ContactPerson ?? "";
+                        if (string.IsNullOrEmpty(parsed.Department))
+                            parsed.Department = request.Department ?? "";
                         
                         parsed.UsedProvider = "edited";
                         parsed.UsedModel = "manual";
@@ -149,22 +155,26 @@ namespace MaxerZ.Api.Services
             if (req.Mode == "existing")
             {
                 return $$"""
-                You are a professional cover letter parser and formatter for MaxerZ app.
-                The user has pasted their existing recipient info and cover letter. Your task is to clean it up, fix any typos, make clean paragraphs, and return it structured in JSON.
-
-                STRICT RULES:
-                - Do NOT rewrite or paraphrase the cover letter content. Keep the text as close to the input as possible, but you may fix minor spelling/grammar/punctuation errors.
-                - Organize it into the JSON structure below.
-                - Extract company name, target position, salutation, body paragraphs, closing, and signer.
-                - Respond ONLY with a valid JSON object. No markdown. No backticks. No explanation.
+                You are a professional cover letter parser and formatter for the MaxerZ app.
+                Your task is to parse, clean up, and structure the candidate's existing recipient information and cover letter.
+                
+                STRICT WRITING & PARSING RULES:
+                1. Do NOT paraphrase, rewrite, or summarize the cover letter content. Keep the text exactly as the candidate wrote it, but you may correct minor spelling, grammar, or punctuation errors.
+                2. Ensure there are absolutely no AI-generated placeholders or artifacts (like `---` or `--` or `[Insert Name]`). If you find any placeholder brackets or symbols, resolve them or clean them up.
+                3. Extract the recipient details (Company Name, Location, Contact Person, Department) from the provided Recipient Info Block.
+                4. Organize the parsed text into the JSON structure below.
+                5. Respond ONLY with a valid, single JSON object. No explanation or surrounding text.
 
                 Required JSON structure:
                 {
                   "companyNameFormatted": "string — company name extracted from info",
+                  "companyLocation": "string — company location/city extracted from info",
+                  "contactPerson": "string — contact person name if found, otherwise empty string",
+                  "department": "string — department name if found, otherwise empty string",
                   "positionFormatted": "string — job position title extracted from info",
-                  "salutationLine": "string — salutation line (e.g., 'Sehr geehrter Herr Feichtegger,' or 'Dear Mr. Smith,')",
-                  "bodyParagraphs": ["string", "string"],
-                  "closingLine": "string — e.g. 'Mit freundlichen Grüßen,' or 'Best regards,'",
+                  "salutationLine": "string — salutation line extracted from cover letter (e.g., 'Sehr geehrter Herr Feichtegger,' or 'Dear Mr. Smith,')",
+                  "bodyParagraphs": ["paragraph 1", "paragraph 2", ...],
+                  "closingLine": "string — closing line (e.g., 'Mit freundlichen Grüßen,' or 'Best regards,')",
                   "signerName": "string — name of the sender at the end",
                   "warnings": []
                 }
@@ -179,20 +189,13 @@ namespace MaxerZ.Api.Services
             else
             {
                 return $$"""
-                You are an expert ATS-friendly cover letter generator for MaxerZ app.
-                Generate a professional cover letter in the requested language ({{req.Language}}) tailored to the provided job description and company details.
-
-                Sender Profile:
-                - Name: {{cfg.Profile.FullName}}
-                - Email: {{cfg.Profile.Email}}
-                - Phone: {{cfg.Profile.Phone}}
-                - LinkedIn: {{cfg.Profile.LinkedInUrl}}
-                - GitHub: {{cfg.Profile.GitHubUrl}}
-                - Website/Portfolio: {{cfg.Profile.WebsiteUrl}}
+                You are a professional, elite executive copywriter specializing in high-impact cover letters.
+                Your task is to write a highly tailored, natural, and humanized cover letter in the requested language ({{req.Language}}) for:
+                - Candidate: {{cfg.Profile.FullName}}
+                - Target Company: {{req.CompanyName}}
+                - Target Position: {{req.Position}}
 
                 Job Details:
-                - Company: {{req.CompanyName}}
-                - Position: {{req.Position}}
                 - Location: {{req.CompanyLocation}}
                 - Contact Person: {{req.ContactPerson ?? "not provided"}}
                 - Department: {{req.Department ?? "not provided"}}
@@ -200,16 +203,24 @@ namespace MaxerZ.Api.Services
                 Job Description / Requirements:
                 {{req.JobDescription}}
 
-                STRICT RULES:
-                - Tone must be professional, confident, and persuasive.
-                - Do NOT include the sender's address/name or receiver's address inside the cover letter paragraphs, as these are rendered automatically by the PDF template layout.
-                - The cover letter must have a proper salutation line. If the contact person is a name like 'Stefan Feichtegger', write a proper German/English salutation (e.g. 'Sehr geehrter Herr Feichtegger,' or 'Dear Mr. Feichtegger,').
-                - Organize the generated text into the JSON structure below.
-                - Respond ONLY with a valid JSON object. No markdown. No backticks. No explanation.
+                Additional Custom Context/Instructions from Candidate:
+                {{req.CoverLetterBody}}
+
+                STRICT WRITING RULES (To avoid AI artifacts and make it look human-written):
+                1. The tone must be professional, confident, organic, and genuinely enthusiastic. Avoid generic corporate buzzwords, clichés, or overly flowery AI language (e.g. "thrilled", "passionate", "delighted", "deeply motivated").
+                2. NEVER use markdown separators (like `---` or `***` or `--`), bullet points, list items, or headers inside the cover letter text itself. Use only natural, flowing paragraphs.
+                3. Do NOT include the sender's address/name or receiver's address inside the cover letter paragraphs. These are automatically rendered by the PDF template layout.
+                4. Provide a proper salutation line. If a contact person is provided (e.g. 'Stefan Feichtegger'), address them directly (e.g., 'Sehr geehrter Herr Feichtegger,' or 'Dear Mr. Feichtegger,'). If no contact person name is provided, address 'Dear Hiring Team,' (English) or 'Sehr geehrte Damen und Herren,' (German).
+                5. Write the cover letter in natural paragraphs (usually 3 to 4 paragraphs).
+                6. Avoid generic cover letter templates. Tailor the content specifically to show how the candidate's experience matches the job description.
+                7. Respond ONLY with a valid, single JSON object. Do not wrap it in markdown block tags (like ```json), do not write any introductory or explanatory text.
 
                 Required JSON structure:
                 {
                   "companyNameFormatted": "{{req.CompanyName}}",
+                  "companyLocation": "{{req.CompanyLocation}}",
+                  "contactPerson": "{{req.ContactPerson ?? ""}}",
+                  "department": "{{req.Department ?? ""}}",
                   "positionFormatted": "{{req.Position}}",
                   "salutationLine": "string — e.g. 'Sehr geehrter Herr Feichtegger,' or 'Dear Mr. Feichtegger,'",
                   "bodyParagraphs": ["paragraph 1", "paragraph 2", "paragraph 3"],
@@ -246,9 +257,20 @@ namespace MaxerZ.Api.Services
 
                 // Validate minimum required fields
                 if (parsed == null ||
-                    string.IsNullOrEmpty(parsed.CompanyNameFormatted) ||
+                    parsed.BodyParagraphs == null ||
                     parsed.BodyParagraphs.Count == 0)
                     return null;
+
+                if (string.IsNullOrEmpty(parsed.CompanyNameFormatted))
+                    parsed.CompanyNameFormatted = fallback.CompanyName;
+                if (string.IsNullOrEmpty(parsed.PositionFormatted))
+                    parsed.PositionFormatted = fallback.Position;
+                if (string.IsNullOrEmpty(parsed.CompanyLocation))
+                    parsed.CompanyLocation = fallback.CompanyLocation;
+                if (string.IsNullOrEmpty(parsed.ContactPerson))
+                    parsed.ContactPerson = fallback.ContactPerson ?? "";
+                if (string.IsNullOrEmpty(parsed.Department))
+                    parsed.Department = fallback.Department ?? "";
 
                 return parsed;
             }
@@ -272,6 +294,9 @@ namespace MaxerZ.Api.Services
             var cfg = _settings.Get();
             var company = req.CompanyName ?? "";
             var pos = req.Position ?? "";
+            var location = req.CompanyLocation ?? "";
+            var contact = req.ContactPerson ?? "";
+            var dept = req.Department ?? "";
 
             if (req.Mode == "existing" && !string.IsNullOrWhiteSpace(req.RawRecipientInfo))
             {
@@ -282,7 +307,22 @@ namespace MaxerZ.Api.Services
                     .ToList();
 
                 if (infoLines.Count > 0) company = infoLines[0];
-                if (infoLines.Count > 3) pos = infoLines[3];
+                
+                if (infoLines.Count == 2)
+                {
+                    location = infoLines[1];
+                }
+                else if (infoLines.Count == 3)
+                {
+                    contact = infoLines[1];
+                    location = infoLines[2];
+                }
+                else if (infoLines.Count >= 4)
+                {
+                    contact = infoLines[1];
+                    dept = infoLines[2];
+                    location = infoLines[3];
+                }
             }
 
             var bodyText = req.CoverLetterBody ?? "";
@@ -301,8 +341,8 @@ namespace MaxerZ.Api.Services
             {
                 // Generate a professional generic template fallback
                 salutation = (req.Language ?? "en").ToLower() == "de"
-                    ? (!string.IsNullOrWhiteSpace(req.ContactPerson) ? $"Sehr geehrte(r) {req.ContactPerson}," : "Sehr geehrte Damen und Herren,")
-                    : (!string.IsNullOrWhiteSpace(req.ContactPerson) ? $"Dear {req.ContactPerson}," : "Dear Hiring Manager,");
+                    ? (!string.IsNullOrWhiteSpace(contact) ? $"Sehr geehrte(r) {contact}," : "Sehr geehrte Damen und Herren,")
+                    : (!string.IsNullOrWhiteSpace(contact) ? $"Dear {contact}," : "Dear Hiring Manager,");
 
                 var bodyParagraph1 = (req.Language ?? "en").ToLower() == "de"
                     ? $"mit großem Interesse bewerbe ich mich hiermit um die Position als {pos} bei {company}."
@@ -345,6 +385,9 @@ namespace MaxerZ.Api.Services
             {
                 CompanyNameFormatted = company,
                 PositionFormatted = pos,
+                CompanyLocation = location,
+                ContactPerson = contact,
+                Department = dept,
                 SalutationLine = salutation,
                 BodyParagraphs = body,
                 ClosingLine = !string.IsNullOrEmpty(closing) ? closing :

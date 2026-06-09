@@ -102,7 +102,10 @@ export class HistoryComponent implements OnInit {
         salutationLine: parsedLayout.salutationLine || 'Dear Hiring Manager,',
         bodyParagraphs: parsedLayout.bodyParagraphs || [rec.contentBody],
         closingLine: parsedLayout.closingLine || 'Best regards,',
-        signerName: parsedLayout.signerName || 'Applicant'
+        signerName: parsedLayout.signerName || 'Applicant',
+        companyLocation: rec.companyLocation || '',
+        contactPerson: rec.contactPerson || '',
+        department: rec.department || ''
       },
       wasFallback: rec.usedProvider === 'RawFallback',
       warnings: [],
