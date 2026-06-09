@@ -18,6 +18,7 @@ namespace MaxerZ.Api
         public static void Main(string[] args)
         {
             QuestPDF.Settings.License = LicenseType.Community;
+            PdfSharpCore.Fonts.GlobalFontSettings.FontResolver = new MaxerZFontResolver();
 
             var builder = WebApplication.CreateBuilder(args);
 
