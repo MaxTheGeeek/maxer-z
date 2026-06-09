@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -15,10 +17,12 @@ namespace MaxerZ.Api.Controllers
     public class SettingsController : ControllerBase
     {
         private readonly SettingsService _settings;
+        private readonly IHttpClientFactory _http;
 
-        public SettingsController(SettingsService settings)
+        public SettingsController(SettingsService settings, IHttpClientFactory http)
         {
             _settings = settings;
+            _http = http;
         }
 
         [HttpGet]
@@ -69,8 +73,18 @@ namespace MaxerZ.Api.Controllers
             return Ok(new { providers = active, priority = cfg.ProviderPriority });
         }
 
+        private static string SanitizeApiKey(string? key)
+        {
+            if (string.IsNullOrWhiteSpace(key)) return "";
+            return key.Trim()
+                .Replace("\r", "")
+                .Replace("\n", "")
+                .Replace("\t", "")
+                .Replace("\u200B", "");
+        }
+
         /// <summary>
-        /// Test a specific provider with a minimal prompt.
+        /// Test a specific provider with a minimal prompt / metadata query (matching Smartiz).
         /// Returns detailed result including which model was used.
         /// AI: never save settings before testing — test with what's provided.
         /// </summary>
@@ -83,10 +97,6 @@ namespace MaxerZ.Api.Controllers
         {
             if (tempSettings == null) return BadRequest("Settings cannot be null.");
 
-            // Temporarily apply settings for this test only
-            var original = _settings.Get();
-            _settings.Save(tempSettings);
-
             try
             {
                 var provider = providers.FirstOrDefault(p => p.ProviderId.Equals(providerId, StringComparison.OrdinalIgnoreCase));
@@ -96,6 +106,65 @@ namespace MaxerZ.Api.Controllers
                 if (!provider.IsConfigured(tempSettings))
                     return Ok(new { success = false, error = "Provider not configured (missing key/URL)" });
 
+                if (providerId.Equals("openrouter", StringComparison.OrdinalIgnoreCase))
+                {
+                    var client = _http.CreateClient("openrouter");
+                    var apiKey = SanitizeApiKey(tempSettings.OpenRouterApiKey);
+                    
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+                    if (!client.DefaultRequestHeaders.Contains("HTTP-Referer"))
+                        client.DefaultRequestHeaders.Add("HTTP-Referer", "app://maxerz");
+                    if (!client.DefaultRequestHeaders.Contains("X-Title"))
+                        client.DefaultRequestHeaders.Add("X-Title", "MaxerZ");
+
+                    var res = await client.GetAsync("https://openrouter.ai/api/v1/key", ct);
+                    if (res.IsSuccessStatusCode)
+                    {
+                        var chain = tempSettings.OpenRouterModelChain ?? new List<string>();
+                        var primaryModel = chain.FirstOrDefault(m => !string.IsNullOrWhiteSpace(m)) ?? "openrouter/free";
+                        return Ok(new { success = true, model = primaryModel, response = "Connected" });
+                    }
+                    else
+                    {
+                        var errText = await res.Content.ReadAsStringAsync(ct);
+                        return Ok(new { success = false, error = $"OpenRouter rejected key: {res.StatusCode} - {errText}" });
+                    }
+                }
+                else if (providerId.Equals("groq", StringComparison.OrdinalIgnoreCase))
+                {
+                    var client = _http.CreateClient("groq");
+                    var apiKey = SanitizeApiKey(tempSettings.GroqApiKey);
+                    
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+
+                    var res = await client.GetAsync("https://api.groq.com/openai/v1/models", ct);
+                    if (res.IsSuccessStatusCode)
+                    {
+                        return Ok(new { success = true, model = tempSettings.GroqModel ?? "llama-3.1-8b-instant", response = "Connected" });
+                    }
+                    else
+                    {
+                        var errText = await res.Content.ReadAsStringAsync(ct);
+                        return Ok(new { success = false, error = $"Groq rejected key: {res.StatusCode} - {errText}" });
+                    }
+                }
+                else if (providerId.Equals("ollama", StringComparison.OrdinalIgnoreCase))
+                {
+                    var client = _http.CreateClient("ollama");
+                    var baseUrl = tempSettings.OllamaBaseUrl ?? "";
+
+                    var res = await client.GetAsync($"{baseUrl.TrimEnd('/')}/api/tags", ct);
+                    if (res.IsSuccessStatusCode)
+                    {
+                        return Ok(new { success = true, model = tempSettings.OllamaModel ?? "mistral", response = "Connected" });
+                    }
+                    else
+                    {
+                        return Ok(new { success = false, error = $"Ollama returned status code: {res.StatusCode}" });
+                    }
+                }
+
+                // Fallback completion test
                 var testPrompt = """
                     Respond ONLY with this exact JSON, nothing else:
                     {"status":"ok","provider":"test"}
@@ -109,11 +178,6 @@ namespace MaxerZ.Api.Controllers
             catch (Exception ex)
             {
                 return Ok(new { success = false, error = ex.Message });
-            }
-            finally
-            {
-                // Restore original settings — save new ones only if user clicks Save
-                _settings.Save(original);
             }
         }
 
