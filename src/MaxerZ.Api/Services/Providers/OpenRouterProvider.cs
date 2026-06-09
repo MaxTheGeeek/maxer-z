@@ -52,11 +52,9 @@ namespace MaxerZ.Api.Services.Providers
                     lastError = ex;
                     continue;
                 }
-                catch (HttpRequestException ex) when (
-                    ex.StatusCode == System.Net.HttpStatusCode.TooManyRequests ||
-                    ex.StatusCode == System.Net.HttpStatusCode.PaymentRequired)
+                catch (HttpRequestException ex) when (ex.StatusCode != System.Net.HttpStatusCode.Unauthorized)
                 {
-                    // Rate limit or quota on this model → try next
+                    // Rate limit, quota, model deprecation (404/400), or server error -> try next model in chain
                     lastError = ex;
                     continue;
                 }

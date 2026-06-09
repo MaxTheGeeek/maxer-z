@@ -13,7 +13,7 @@ namespace MaxerZ.Api.Models
         // If first model runs out of tokens, next is used automatically.
         public List<string> OpenRouterModelChain { get; set; } = new()
         {
-            "mistralai/mistral-7b-instruct:free",
+            "openrouter/free",
             "meta-llama/llama-3-8b-instruct:free",
             "google/gemma-2-9b-it:free",
             "openchat/openchat-7b:free"
@@ -23,7 +23,7 @@ namespace MaxerZ.Api.Models
         // Free, fast, unlimited for practical purposes.
         // Auto-disabled if key is empty.
         public string GroqApiKey { get; set; } = "";
-        public string GroqModel { get; set; } = "llama3-8b-8192";
+        public string GroqModel { get; set; } = "llama-3.1-8b-instant";
 
         // === Ollama (Homelab) ===
         // No key needed — disabled only if BaseUrl is empty.
