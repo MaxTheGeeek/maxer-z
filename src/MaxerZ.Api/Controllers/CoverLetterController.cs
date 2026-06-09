@@ -18,6 +18,7 @@ namespace MaxerZ.Api.Controllers
         private readonly PdfService _pdf;
         private readonly McpService _mcp;
         private readonly AppDbContext _db;
+        private static byte[]? _lastPreviewPdf;
 
         public CoverLetterController(
             LlmOrchestrator llm,
@@ -40,6 +41,7 @@ namespace MaxerZ.Api.Controllers
 
             var layout = await _llm.ValidateAndLayoutAsync(req, ct);
             var pdfBytes = _pdf.GeneratePdf(req, layout);
+            _lastPreviewPdf = pdfBytes;
             return Ok(new
             {
                 pdfBase64 = Convert.ToBase64String(pdfBytes),
@@ -61,6 +63,7 @@ namespace MaxerZ.Api.Controllers
 
             var layout = await _llm.ValidateAndLayoutAsync(req, ct);
             var pdfBytes = _pdf.GeneratePdf(req, layout);
+            _lastPreviewPdf = pdfBytes;
             var pdfPath = await _pdf.SavePdfAsync(pdfBytes, layout.CompanyNameFormatted);
             if (pdfPath == null)
             {
@@ -114,6 +117,17 @@ namespace MaxerZ.Api.Controllers
                 .Take(50)
                 .ToListAsync();
             return Ok(records);
+        }
+
+        // GET /api/coverletter/preview-pdf
+        [HttpGet("preview-pdf")]
+        public IActionResult GetPreviewPdf()
+        {
+            if (_lastPreviewPdf == null)
+            {
+                return NotFound("No preview PDF available.");
+            }
+            return File(_lastPreviewPdf, "application/pdf");
         }
     }
 }

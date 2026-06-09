@@ -59,17 +59,13 @@ export class PreviewComponent implements OnInit {
     this.closingLine.set(layout.closingLine || '');
     this.signerName.set(layout.signerName || '');
 
-    this.updatePdfPreview(state.result.pdfBase64);
+    this.updatePdfPreview();
   }
 
-  updatePdfPreview(base64?: string) {
-    if (base64) {
-      const dataUrl = `data:application/pdf;base64,${base64}`;
-      const safeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(dataUrl);
-      this.pdfUrl.set(safeUrl);
-    } else {
-      this.pdfUrl.set(null);
-    }
+  updatePdfPreview() {
+    const url = `${this.coverLetterService.getPreviewPdfUrl()}?t=${Date.now()}`;
+    const safeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url);
+    this.pdfUrl.set(safeUrl);
   }
 
   // Regenerate: call preview API endpoint again
@@ -129,7 +125,7 @@ export class PreviewComponent implements OnInit {
         
         // Update the cached results with new PDF base64 if returned
         if (exportedResult.pdfBase64) {
-          this.updatePdfPreview(exportedResult.pdfBase64);
+          this.updatePdfPreview();
         }
       },
       error: (err) => {

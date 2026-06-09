@@ -11,6 +11,10 @@ export class CoverLetterService {
     return 'http://localhost:5000/api/coverletter';
   }
 
+  getPreviewPdfUrl(): string {
+    return `${this.base}/preview-pdf`;
+  }
+
   private previewState: { result: LlmResult; request: CoverLetterRequest; lang: string } | null = null;
   private composeState: any = null;
 
