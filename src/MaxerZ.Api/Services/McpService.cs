@@ -38,8 +38,13 @@ namespace MaxerZ.Api.Services
 
                 if (!string.IsNullOrWhiteSpace(config.McpApiKey))
                 {
+                    var token = config.McpApiKey.Trim();
+                    if (token.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                    {
+                        token = token.Substring(7).Trim();
+                    }
                     client.DefaultRequestHeaders.Authorization = 
-                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", config.McpApiKey);
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
                 }
 
                 // POST to the configured MCP endpoint (we append /coverletters to the base URL)
