@@ -21,6 +21,10 @@ namespace MaxerZ.Api.Services
             _settingsPath = Path.Combine(dir, "settings.json");
             _mcpPath = Path.Combine(dir, "mcp.json");
             _cache = Load<AppSettings>(_settingsPath) ?? new AppSettings();
+            if (_cache.Profile.Addresses == null || _cache.Profile.Addresses.Count == 0)
+            {
+                _cache.Profile.Addresses = new List<string> { _cache.Profile.Address };
+            }
             _mcpCache = Load<McpConfig>(_mcpPath) ?? new McpConfig();
         }
 

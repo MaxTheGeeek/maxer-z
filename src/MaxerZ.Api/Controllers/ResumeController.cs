@@ -12,35 +12,38 @@ namespace MaxerZ.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class CoverLetterController : ControllerBase
+    public class ResumeController : ControllerBase
     {
         private readonly LlmOrchestrator _llm;
         private readonly PdfService _pdf;
         private readonly McpService _mcp;
         private readonly AppDbContext _db;
+        private readonly SettingsService _settings;
         public static byte[]? LastPreviewPdf;
 
-        public CoverLetterController(
+        public ResumeController(
             LlmOrchestrator llm,
             PdfService pdf,
             McpService mcp,
+            SettingsService settings,
             AppDbContext db)
         {
             _llm = llm;
             _pdf = pdf;
             _mcp = mcp;
+            _settings = settings;
             _db = db;
         }
 
-        // POST /api/coverletter/preview
+        // POST /api/resume/preview
         [HttpPost("preview")]
         public async Task<IActionResult> Preview(
-            [FromBody] CoverLetterRequest req, CancellationToken ct)
+            [FromBody] ResumeRequest req, CancellationToken ct)
         {
             if (req == null) return BadRequest("Request body cannot be null.");
 
-            var layout = await _llm.ValidateAndLayoutAsync(req, ct);
-            var pdfBytes = _pdf.GeneratePdf(req, layout);
+            var layout = await _llm.ValidateAndLayoutResumeAsync(req, ct);
+            var pdfBytes = _pdf.GenerateResumePdf(req, layout);
             LastPreviewPdf = pdfBytes;
             return Ok(new
             {
@@ -54,72 +57,69 @@ namespace MaxerZ.Api.Controllers
             });
         }
 
-        // POST /api/coverletter/export
+        // POST /api/resume/export
         [HttpPost("export")]
         public async Task<IActionResult> Export(
-            [FromBody] CoverLetterRequest req, CancellationToken ct)
+            [FromBody] ResumeRequest req, CancellationToken ct)
         {
             if (req == null) return BadRequest("Request body cannot be null.");
 
-            var layout = await _llm.ValidateAndLayoutAsync(req, ct);
-            var pdfBytes = _pdf.GeneratePdf(req, layout);
+            var layout = await _llm.ValidateAndLayoutResumeAsync(req, ct);
+            var pdfBytes = _pdf.GenerateResumePdf(req, layout);
             LastPreviewPdf = pdfBytes;
-            var pdfPath = await _pdf.SavePdfAsync(pdfBytes, layout.CompanyNameFormatted);
+
+            var profileName = _settings.Get().Profile.FullName ?? "Candidate";
+            var pdfPath = await _pdf.SaveResumePdfAsync(pdfBytes, profileName);
             if (pdfPath == null)
             {
                 return BadRequest(new { error = "Export cancelled by user." });
             }
 
-            var record = new CoverLetterRecord
+            var record = new ResumeRecord
             {
-                CompanyName = layout.CompanyNameFormatted,
-                ContactPerson = req.ContactPerson ?? layout.SalutationLine,
-                Department = req.Department,
-                CompanyLocation = req.CompanyLocation,
-                Position = layout.PositionFormatted,
+                Summary = req.Summary,
+                Experience = req.Experience,
+                Education = req.Education,
+                Skills = req.Skills,
+                Projects = req.Projects,
                 Language = req.Language,
-                ContentBody = string.Join("\n\n", layout.BodyParagraphs),
+                SelectedTemplate = req.SelectedTemplate,
+                HeaderAddress = req.HeaderAddress,
                 PdfPath = pdfPath,
                 UsedProvider = layout.UsedProvider,
                 UsedModel = layout.UsedModel,
-                SelectedTemplate = req.SelectedTemplate,
-                HeaderAddress = req.HeaderAddress ?? "",
                 Status = "exported"
             };
 
-            _db.CoverLetters.Add(record);
+            _db.Resumes.Add(record);
             await _db.SaveChangesAsync(ct);
 
-            var synced = await _mcp.SaveCoverLetterAsync(record);
-            if (synced)
-            {
-                record.SyncedToMcp = true;
-                await _db.SaveChangesAsync(ct);
-            }
-
+            // Cover letter sync to MCP exists. We could also index resumes similarly if MCP supports it,
+            // or just log it/save it locally. Let's keep it simple for resumes or try to index as well if needed.
+            // For now, saving to DB is plenty.
+            
             return Ok(new
             {
                 pdfPath,
                 recordId = record.Id,
-                syncedToMcp = synced,
                 usedProvider = layout.UsedProvider,
                 usedModel = layout.UsedModel,
                 attemptLog = layout.AttemptLog
             });
         }
 
-        // GET /api/coverletter/history
+        // GET /api/resume/history
         [HttpGet("history")]
         public async Task<IActionResult> History()
         {
-            var records = await _db.CoverLetters
+            var records = await _db.Resumes
                 .OrderByDescending(r => r.CreatedAt)
                 .Take(50)
                 .ToListAsync();
             return Ok(records);
         }
 
-        // GET /api/coverletter/preview-pdf
+        // GET /api/resume/preview-pdf
         [HttpGet("preview-pdf")]
         public IActionResult GetPreviewPdf()
         {

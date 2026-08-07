@@ -51,10 +51,20 @@ namespace MaxerZ.Api.Services
             var brushHeaderBlue = new XSolidBrush(XColor.FromArgb(0x00, 0x6C, 0xA5));
             var brushHeaderDark = new XSolidBrush(XColor.FromArgb(0x33, 0x33, 0x33));
 
+            // Load profile settings
+            var profile = _settings.Get().Profile;
+            var name = string.IsNullOrWhiteSpace(profile.FullName) ? "MAJID BEHZADI" : profile.FullName.ToUpper();
+            var role = string.IsNullOrWhiteSpace(profile.Role) ? "Full-Stack Engineer | C# & ASP.NET Core | TypeScript & JavaScript" : profile.Role;
+            var phone = string.IsNullOrWhiteSpace(profile.Phone) ? "+43 6769701820" : profile.Phone;
+            var email = string.IsNullOrWhiteSpace(profile.Email) ? "maxbehzadi82@gmail.com" : profile.Email;
+            var linkedin = string.IsNullOrWhiteSpace(profile.LinkedInUrl) ? "linkedin.com/in/maxii" : profile.LinkedInUrl;
+            var website = string.IsNullOrWhiteSpace(profile.WebsiteUrl) ? "maxbehzadi.online" : profile.WebsiteUrl;
+            var github = string.IsNullOrWhiteSpace(profile.GitHubUrl) ? "github.com/MaxTheGeeek" : profile.GitHubUrl;
+
             // Line 1: Name
             DrawCenteredSegments(gfx, 50, new TextSegment
             {
-                Text = "MAJID BEHZADI",
+                Text = name,
                 Font = headerNameFont,
                 Brush = brushHeaderBlue
             });
@@ -62,26 +72,26 @@ namespace MaxerZ.Api.Services
             // Line 2: Role / Skills
             DrawCenteredSegments(gfx, 68, new TextSegment
             {
-                Text = "Full-Stack Engineer | C# & ASP.NET Core | TypeScript & JavaScript",
+                Text = role,
                 Font = headerRoleFont,
                 Brush = brushHeaderDark
             });
 
             // Line 3: Contact Details
             DrawCenteredSegments(gfx, 83, 
-                new TextSegment { Text = "+43 6769701820 | maxbehzadi82@gmail.com | ", Font = headerInfoFont, Brush = brushHeaderDark },
-                new TextSegment { Text = "linkedin.com/in/maxii", Font = headerInfoFont, Brush = brushHeaderBlue },
+                new TextSegment { Text = $"{phone} | {email} | ", Font = headerInfoFont, Brush = brushHeaderDark },
+                new TextSegment { Text = linkedin, Font = headerInfoFont, Brush = brushHeaderBlue },
                 new TextSegment { Text = " | Portfolio: ", Font = headerInfoFont, Brush = brushHeaderDark },
-                new TextSegment { Text = "maxbehzadi.online", Font = headerInfoFont, Brush = brushHeaderBlue }
+                new TextSegment { Text = website, Font = headerInfoFont, Brush = brushHeaderBlue }
             );
 
             // Line 4: GitHub & Address
             var addressText = string.IsNullOrWhiteSpace(request.HeaderAddress) 
-                ? (_settings.Get().Profile.Address ?? "Wiener Straße 20 / 1, 2442 Unterwaltersdorf")
+                ? (profile.Address ?? "Wiener Straße 20 / 1, 2442 Unterwaltersdorf")
                 : request.HeaderAddress;
 
             DrawCenteredSegments(gfx, 98, 
-                new TextSegment { Text = "github.com/MaxTheGeeek", Font = headerInfoFont, Brush = brushHeaderBlue },
+                new TextSegment { Text = github, Font = headerInfoFont, Brush = brushHeaderBlue },
                 new TextSegment { Text = " | " + addressText, Font = headerInfoFont, Brush = brushHeaderDark }
             );
 
@@ -203,10 +213,231 @@ namespace MaxerZ.Api.Services
                 gfx.DrawString(layout.SignerName ?? "", fontSigner, brushPrimary, 42, currentY);
             }
 
+            // 11. Custom Footer links
+            if (!string.IsNullOrWhiteSpace(profile.FooterText))
+            {
+                // Wipe bottom footer text zone with a small white rectangle to preserve template margins
+                gfx.DrawRectangle(XBrushes.White, 0, 790, 595, 25);
+
+                var footerFont = new XFont("Arial", 8, XFontStyle.Regular);
+                var brushFooter = new XSolidBrush(XColor.FromArgb(0x77, 0x77, 0x77));
+                DrawCenteredSegments(gfx, 805, new TextSegment
+                {
+                    Text = profile.FooterText,
+                    Font = footerFont,
+                    Brush = brushFooter
+                });
+            }
+
             // Save PDF to memory stream and return as byte array
             using var ms = new MemoryStream();
             document.Save(ms);
             return ms.ToArray();
+        }
+
+        public byte[] GenerateResumePdf(ResumeRequest request, ResumeResult layout)
+        {
+            // Find and load the selected template PDF
+            var templatePath = FindTemplatePdfPath(request.SelectedTemplate);
+            
+            // Open the template PDF using PdfSharpCore
+            using var document = PdfReader.Open(templatePath, PdfDocumentOpenMode.Modify);
+            if (document.PageCount == 0)
+            {
+                throw new InvalidOperationException("The template PDF contains no pages.");
+            }
+
+            // Retrieve the first page to draw text on
+            var page = document.Pages[0];
+            var gfx = XGraphics.FromPdfPage(page);
+
+            // Define colors matching the JSON template style
+            var brushPrimary = new XSolidBrush(XColor.FromArgb(0x1A, 0x1A, 0x2E));
+            var brushSecondary = new XSolidBrush(XColor.FromArgb(0x55, 0x55, 0x55));
+            var brushAccent = new XSolidBrush(XColor.FromArgb(0x00, 0x6C, 0xA5));
+
+            // Wipe pre-baked header area on the template page
+            gfx.DrawRectangle(XBrushes.White, 0, 0, 595, 120);
+
+            // Define header fonts & brushes
+            var headerNameFont = new XFont("Arial", 17, XFontStyle.Bold);
+            var headerRoleFont = new XFont("Arial", 10.5, XFontStyle.Regular);
+            var headerInfoFont = new XFont("Arial", 8.5, XFontStyle.Regular);
+            var brushHeaderBlue = new XSolidBrush(XColor.FromArgb(0x00, 0x6C, 0xA5));
+            var brushHeaderDark = new XSolidBrush(XColor.FromArgb(0x33, 0x33, 0x33));
+
+            // Load profile settings
+            var profile = _settings.Get().Profile;
+            var name = string.IsNullOrWhiteSpace(profile.FullName) ? "MAJID BEHZADI" : profile.FullName.ToUpper();
+            var role = string.IsNullOrWhiteSpace(profile.Role) ? "Full-Stack Engineer | C# & ASP.NET Core | TypeScript & JavaScript" : profile.Role;
+            var phone = string.IsNullOrWhiteSpace(profile.Phone) ? "+43 6769701820" : profile.Phone;
+            var email = string.IsNullOrWhiteSpace(profile.Email) ? "maxbehzadi82@gmail.com" : profile.Email;
+            var linkedin = string.IsNullOrWhiteSpace(profile.LinkedInUrl) ? "linkedin.com/in/maxii" : profile.LinkedInUrl;
+            var website = string.IsNullOrWhiteSpace(profile.WebsiteUrl) ? "maxbehzadi.online" : profile.WebsiteUrl;
+            var github = string.IsNullOrWhiteSpace(profile.GitHubUrl) ? "github.com/MaxTheGeeek" : profile.GitHubUrl;
+
+            // Line 1: Name
+            DrawCenteredSegments(gfx, 50, new TextSegment
+            {
+                Text = name,
+                Font = headerNameFont,
+                Brush = brushHeaderBlue
+            });
+
+            // Line 2: Role / Skills
+            DrawCenteredSegments(gfx, 68, new TextSegment
+            {
+                Text = role,
+                Font = headerRoleFont,
+                Brush = brushHeaderDark
+            });
+
+            // Line 3: Contact Details
+            DrawCenteredSegments(gfx, 83, 
+                new TextSegment { Text = $"{phone} | {email} | ", Font = headerInfoFont, Brush = brushHeaderDark },
+                new TextSegment { Text = linkedin, Font = headerInfoFont, Brush = brushHeaderBlue },
+                new TextSegment { Text = " | Portfolio: ", Font = headerInfoFont, Brush = brushHeaderDark },
+                new TextSegment { Text = website, Font = headerInfoFont, Brush = brushHeaderBlue }
+            );
+
+            // Line 4: GitHub & Address
+            var addressText = string.IsNullOrWhiteSpace(request.HeaderAddress) 
+                ? (profile.Address ?? "Wiener Straße 20 / 1, 2442 Unterwaltersdorf")
+                : request.HeaderAddress;
+
+            DrawCenteredSegments(gfx, 98, 
+                new TextSegment { Text = github, Font = headerInfoFont, Brush = brushHeaderBlue },
+                new TextSegment { Text = " | " + addressText, Font = headerInfoFont, Brush = brushHeaderDark }
+            );
+
+            // Draw a blue divider line under the header
+            var penAccent = new XPen(XColor.FromArgb(0x00, 0x6C, 0xA5), 1.5);
+            gfx.DrawLine(penAccent, 42, 112, 553, 112);
+
+            // Content drawing setup
+            double currentY = 135;
+            
+            var fontSectionTitle = new XFont("Arial", 11, XFontStyle.Bold);
+            var fontBody = new XFont("Arial", 9.5, XFontStyle.Regular);
+            var fontBodyBold = new XFont("Arial", 9.5, XFontStyle.Bold);
+
+            // Helper to draw sections
+            void DrawSection(string title, string content)
+            {
+                if (string.IsNullOrWhiteSpace(content)) return;
+
+                // Check page transition before drawing title
+                if (currentY > 720)
+                {
+                    page = document.AddPage();
+                    gfx = XGraphics.FromPdfPage(page);
+                    currentY = 50;
+                }
+
+                // Draw section title
+                gfx.DrawString(title.ToUpper(), fontSectionTitle, brushAccent, 42, currentY);
+                currentY += 14;
+
+                // Draw thin underline for section title
+                var penDivider = new XPen(XColor.FromArgb(0xEE, 0xEE, 0xEE), 1);
+                gfx.DrawLine(penDivider, 42, currentY - 11, 553, currentY - 11);
+                currentY += 4;
+
+                // Process lines/paragraphs of content
+                var lines = content.Split('\n')
+                    .Select(l => l.Trim())
+                    .Where(l => l.Length > 0 || l == "")
+                    .ToList();
+
+                foreach (var line in lines)
+                {
+                    if (string.IsNullOrWhiteSpace(line))
+                    {
+                        currentY += 6; // Paragraph spacing
+                        continue;
+                    }
+
+                    // Handle list item bullet formatting
+                    bool isBullet = line.StartsWith("-") || line.StartsWith("*") || line.StartsWith("•");
+                    string textToDraw = line;
+                    double leftIndent = 42;
+
+                    if (isBullet)
+                    {
+                        textToDraw = line.Substring(1).Trim();
+                        // Draw bullet point dot/circle
+                        gfx.DrawString("•", fontBodyBold, brushPrimary, 42, currentY);
+                        leftIndent = 52;
+                    }
+
+                    var wrappedLines = WrapText(textToDraw, 553 - leftIndent, gfx, fontBody);
+                    foreach (var wl in wrappedLines)
+                    {
+                        if (currentY > 740)
+                        {
+                            page = document.AddPage();
+                            gfx = XGraphics.FromPdfPage(page);
+                            currentY = 50;
+                            if (isBullet) leftIndent = 52;
+                        }
+                        gfx.DrawString(wl ?? "", fontBody, brushPrimary, leftIndent, currentY);
+                        currentY += 13.5;
+                    }
+                }
+
+                currentY += 15; // Spacing after section
+            }
+
+            // Draw resume sections
+            var isDe = (request.Language ?? "en").ToLower() == "de";
+            DrawSection(isDe ? "Zusammenfassung" : "Professional Summary", layout.SummaryFormatted);
+            DrawSection(isDe ? "Berufserfahrung" : "Work Experience", layout.ExperienceFormatted);
+            DrawSection(isDe ? "Ausbildung" : "Education", layout.EducationFormatted);
+            DrawSection(isDe ? "Projekte" : "Projects", layout.ProjectsFormatted);
+            DrawSection(isDe ? "Kenntnisse" : "Skills", layout.SkillsFormatted);
+
+            // Custom Footer links
+            if (!string.IsNullOrWhiteSpace(profile.FooterText))
+            {
+                // Wipe bottom footer text zone with a small white rectangle to preserve template margins
+                gfx.DrawRectangle(XBrushes.White, 0, 790, 595, 25);
+
+                var footerFont = new XFont("Arial", 8, XFontStyle.Regular);
+                var brushFooter = new XSolidBrush(XColor.FromArgb(0x77, 0x77, 0x77));
+                DrawCenteredSegments(gfx, 805, new TextSegment
+                {
+                    Text = profile.FooterText,
+                    Font = footerFont,
+                    Brush = brushFooter
+                });
+            }
+
+            using var ms = new MemoryStream();
+            document.Save(ms);
+            return ms.ToArray();
+        }
+
+        public async Task<string?> SaveResumePdfAsync(byte[] bytes, string signerName)
+        {
+            var safe = string.Concat(signerName.Split(Path.GetInvalidFileNameChars()));
+            var name = $"Resume_{safe}_{DateTime.Now:yyyyMMdd}.pdf";
+
+            if (FileSaveDialogHelper.SaveFileDialogAsync != null)
+            {
+                var chosenPath = await FileSaveDialogHelper.SaveFileDialogAsync(name, bytes);
+                return chosenPath; // returns null if cancelled
+            }
+
+            var cfg = _settings.Get();
+            var dir = cfg.ExportDirectory
+                .Replace("~", Environment.GetFolderPath(
+                    Environment.SpecialFolder.Personal));
+            var expandedDir = Environment.ExpandEnvironmentVariables(dir);
+            Directory.CreateDirectory(expandedDir);
+
+            var path = Path.Combine(expandedDir, name);
+            File.WriteAllBytes(path, bytes);
+            return path;
         }
 
         public async Task<string?> SavePdfAsync(byte[] bytes, string companyName)

@@ -6,6 +6,9 @@ export interface UserProfile {
   gitHubUrl: string;
   websiteUrl: string;
   address: string;
+  addresses?: string[];
+  role?: string;
+  footerText?: string;
 }
 
 export interface AppSettings {
@@ -80,3 +83,49 @@ export interface LlmResult {
   attemptLog: string[];
   syncedToMcp: boolean;
 }
+
+export interface ResumeRequest {
+  summary: string;
+  experience: string;
+  education: string;
+  skills: string;
+  projects: string;
+  language: string;
+  selectedTemplate: string;
+  headerAddress: string;
+}
+
+export interface ResumeResult {
+  layout: {
+    summaryFormatted: string;
+    experienceFormatted: string;
+    educationFormatted: string;
+    skillsFormatted: string;
+    projectsFormatted: string;
+  };
+  pdfBase64?: string;
+  pdfPath?: string;
+  wasFallback: boolean;
+  warnings: string[];
+  attemptLog: string[];
+  usedProvider: string;
+  usedModel: string;
+}
+
+export interface ResumeRecord {
+  id: number;
+  summary: string;
+  experience: string;
+  education: string;
+  skills: string;
+  projects: string;
+  language: string;
+  selectedTemplate: string;
+  headerAddress: string;
+  pdfPath: string;
+  syncedToMcp: boolean;
+  createdAt: string;
+  usedProvider: string;
+  usedModel: string;
+}
+

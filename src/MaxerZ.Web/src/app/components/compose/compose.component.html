@@ -75,7 +75,15 @@
 
         <div class="form-group" style="margin-top: 15px;">
           <label for="header-address-1">Header Address (Only Changeable Header Field)</label>
-          <input type="text" id="header-address-1" [(ngModel)]="headerAddress" placeholder="Wiener Straße 20 / 1, 2442 Unterwaltersdorf" />
+          @if (addresses().length > 0) {
+            <select id="header-address-1" [ngModel]="headerAddress()" (ngModelChange)="headerAddress.set($event)">
+              @for (addr of addresses(); track addr) {
+                <option [value]="addr">{{ addr }}</option>
+              }
+            </select>
+          } @else {
+            <input type="text" id="header-address-1" [ngModel]="headerAddress()" (ngModelChange)="headerAddress.set($event)" placeholder="Wiener Straße 20 / 1, 2442 Unterwaltersdorf" />
+          }
         </div>
 
         <div class="form-actions">
@@ -161,7 +169,15 @@
 
         <div class="form-group" style="margin-top: 15px;">
           <label for="header-address-2">Header Address (Only Changeable Header Field)</label>
-          <input type="text" id="header-address-2" [(ngModel)]="headerAddress" placeholder="Wiener Straße 20 / 1, 2442 Unterwaltersdorf" />
+          @if (addresses().length > 0) {
+            <select id="header-address-2" [ngModel]="headerAddress()" (ngModelChange)="headerAddress.set($event)">
+              @for (addr of addresses(); track addr) {
+                <option [value]="addr">{{ addr }}</option>
+              }
+            </select>
+          } @else {
+            <input type="text" id="header-address-2" [ngModel]="headerAddress()" (ngModelChange)="headerAddress.set($event)" placeholder="Wiener Straße 20 / 1, 2442 Unterwaltersdorf" />
+          }
         </div>
 
         <div class="form-actions">

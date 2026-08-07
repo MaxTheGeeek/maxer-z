@@ -10,5 +10,6 @@ namespace MaxerZ.Api.Data
         }
 
         public DbSet<CoverLetterRecord> CoverLetters { get; set; } = null!;
+        public DbSet<ResumeRecord> Resumes { get; set; } = null!;
     }
 }

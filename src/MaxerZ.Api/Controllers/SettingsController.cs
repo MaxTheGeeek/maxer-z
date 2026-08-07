@@ -270,5 +270,45 @@ namespace MaxerZ.Api.Controllers
 
             return NotFound("Template not found.");
         }
+
+        [HttpPost("clear-cache")]
+        public IActionResult ClearCache()
+        {
+            try
+            {
+                // Clear static memory buffers in controllers
+                CoverLetterController.LastPreviewPdf = null;
+                ResumeController.LastPreviewPdf = null;
+
+                // Clear temp folder files starting with CoverLetter_ or Resume_
+                var tempPath = Path.GetTempPath();
+                int count = 0;
+                if (Directory.Exists(tempPath))
+                {
+                    var files = Directory.GetFiles(tempPath)
+                        .Where(f => {
+                            var name = Path.GetFileName(f);
+                            return name.StartsWith("CoverLetter_", StringComparison.OrdinalIgnoreCase) || 
+                                   name.StartsWith("Resume_", StringComparison.OrdinalIgnoreCase);
+                        });
+
+                    foreach (var file in files)
+                    {
+                        try
+                        {
+                            System.IO.File.Delete(file);
+                            count++;
+                        }
+                        catch { /* Ignore locked files */ }
+                    }
+                }
+
+                return Ok(new { success = true, message = $"Cleared in-memory buffers and deleted {count} temporary files." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, error = ex.Message });
+            }
+        }
     }
 }

@@ -162,8 +162,9 @@ namespace MaxerZ.Api.Services
                 1. Do NOT paraphrase, rewrite, or summarize the cover letter content. Keep the text exactly as the candidate wrote it, but you may correct minor spelling, grammar, or punctuation errors.
                 2. Ensure there are absolutely no AI-generated placeholders or artifacts (like `---` or `--` or `[Insert Name]`). If you find any placeholder brackets or symbols, resolve them or clean them up.
                 3. Extract the recipient details (Company Name, Location, Contact Person, Department) from the provided Recipient Info Block.
-                4. Organize the parsed text into the JSON structure below.
-                5. Respond ONLY with a valid, single JSON object. No explanation or surrounding text.
+                4. The subject line (starting with 'Betreff', 'Subject', or 'Bewerbung' or containing 'Bewerbung als') must NEVER be included in `companyNameFormatted` or `companyLocation` or `contactPerson`. It must strictly be extracted into `positionFormatted`. Keep any existing colon (:) if present.
+                5. Organize the parsed text into the JSON structure below.
+                6. Respond ONLY with a valid, single JSON object. No explanation or surrounding text.
 
                 Required JSON structure:
                 {
@@ -212,7 +213,7 @@ namespace MaxerZ.Api.Services
                 3. Do NOT include the sender's address/name or receiver's address inside the cover letter paragraphs. These are automatically rendered by the PDF template layout.
                 4. Provide a proper salutation line. If a contact person is provided (e.g. 'Stefan Feichtegger'), address them directly (e.g., 'Sehr geehrter Herr Feichtegger,' or 'Dear Mr. Feichtegger,'). If no contact person name is provided, address 'Dear Hiring Team,' (English) or 'Sehr geehrte Damen und Herren,' (German).
                 5. Write the cover letter in natural paragraphs (usually 3 to 4 paragraphs).
-                6. Avoid generic cover letter templates. Tailor the content specifically to show how the candidate's experience matches the job description.
+                6. Avoid generic cover letter templates. Start directly with a compelling opening statement. Do NOT use boilerplate openers like "I am writing to express my interest in..." or "With this application, I would like to apply for...". Instead, hook the reader by connecting the candidate's achievements or skill alignment directly with the position.
                 7. Respond ONLY with a valid, single JSON object. Do not wrap it in markdown block tags (like ```json), do not write any introductory or explanatory text.
 
                 Required JSON structure:
@@ -306,6 +307,20 @@ namespace MaxerZ.Api.Services
                     .Where(l => l.Length > 0)
                     .ToList();
 
+                // Extract subject line if it exists to prevent mapping it to location or contact
+                var subjectIdx = infoLines.FindIndex(l =>
+                    l.StartsWith("Betreff", StringComparison.OrdinalIgnoreCase) ||
+                    l.StartsWith("Subject", StringComparison.OrdinalIgnoreCase) ||
+                    l.StartsWith("Bewerbung", StringComparison.OrdinalIgnoreCase) ||
+                    l.StartsWith("Re:", StringComparison.OrdinalIgnoreCase) ||
+                    l.Contains("Bewerbung als", StringComparison.OrdinalIgnoreCase));
+
+                if (subjectIdx >= 0)
+                {
+                    pos = infoLines[subjectIdx];
+                    infoLines.RemoveAt(subjectIdx);
+                }
+
                 if (infoLines.Count > 0) company = infoLines[0];
                 
                 if (infoLines.Count == 2)
@@ -393,6 +408,160 @@ namespace MaxerZ.Api.Services
                 ClosingLine = !string.IsNullOrEmpty(closing) ? closing :
                     ((req.Language ?? "en").ToLower() == "de" ? "Mit freundlichen Grüßen," : "Best regards,"),
                 SignerName = signer,
+                UsedProvider = usedProvider,
+                UsedModel = usedModel,
+                AttemptLog = attemptLog,
+                Warnings = warnings,
+                WasFallback = usedProvider == "fallback"
+            };
+        }
+
+        public async Task<ResumeResult> ValidateAndLayoutResumeAsync(
+            ResumeRequest request,
+            CancellationToken ct = default)
+        {
+            var cfg = _settings.Get();
+            var prompt = BuildResumePrompt(request);
+            var attemptLog = new List<string>();
+
+            var activeProviders = cfg.ProviderPriority
+                .Select(id => _providers.FirstOrDefault(p => p.ProviderId == id))
+                .Where(p => p != null && p!.IsConfigured(cfg))
+                .Cast<ILlmProvider>()
+                .ToList();
+
+            if (activeProviders.Count == 0)
+            {
+                _logger.LogWarning("No LLM providers configured. Using raw fallback.");
+                attemptLog.Add("no-providers-configured → raw-fallback");
+                return RawResumeFallbackLayout(request, attemptLog,
+                    new List<string> { "No API keys configured. Using raw text." });
+            }
+
+            foreach (var provider in activeProviders)
+            {
+                try
+                {
+                    _logger.LogInformation("Trying provider for resume: {Provider}", provider.ProviderId);
+                    var (rawResponse, modelUsed) = await provider.CompleteAsync(prompt, cfg, ct);
+
+                    attemptLog.Add($"{provider.ProviderId}/{modelUsed} → ok");
+
+                    var parsed = TryParseResumeResponse(rawResponse, request);
+                    if (parsed != null)
+                    {
+                        parsed.UsedProvider = provider.ProviderId;
+                        parsed.UsedModel = modelUsed;
+                        parsed.AttemptLog = attemptLog;
+                        return parsed;
+                    }
+
+                    attemptLog.Add($"{provider.ProviderId}/{modelUsed} → parse-failed, using raw");
+                    return RawResumeFallbackLayout(request, attemptLog,
+                        new List<string> { "LLM response could not be parsed. Raw content used." },
+                        provider.ProviderId, modelUsed);
+                }
+                catch (ProviderExhaustedException ex)
+                {
+                    var msg = $"{ex.Provider}/{ex.Model} → token-exhausted: {ex.Message}";
+                    _logger.LogWarning(msg);
+                    attemptLog.Add(msg);
+                }
+                catch (ProviderUnavailableException ex)
+                {
+                    var msg = $"{ex.Provider} → unavailable: {ex.Message}";
+                    _logger.LogWarning(msg);
+                    attemptLog.Add(msg);
+                }
+                catch (Exception ex)
+                {
+                    var msg = $"{provider.ProviderId} → unexpected: {ex.Message}";
+                    _logger.LogError(ex, msg);
+                    attemptLog.Add(msg);
+                }
+            }
+
+            _logger.LogWarning("All providers failed. Using raw fallback.");
+            attemptLog.Add("all-providers-failed → raw-fallback");
+            return RawResumeFallbackLayout(request, attemptLog,
+                new List<string> { "All LLM providers unavailable. Raw content used directly." });
+        }
+
+        private string BuildResumePrompt(ResumeRequest req)
+        {
+            return $$"""
+            You are a professional resume writer and formatter for MaxerZ app.
+
+            STRICT RULES:
+            - Optimize and format the text for each section to be highly professional, polished, and ATS-friendly.
+            - Do NOT rewrite or paraphrase the facts; keep all dates, job titles, companies, and achievements accurate as provided.
+            - Focus on clear formatting, action verbs, and readability.
+            - Respond ONLY with a valid JSON object. No markdown. No backticks. No explanation.
+
+            Required JSON structure:
+            {
+              "summaryFormatted": "string — polished professional summary",
+              "experienceFormatted": "string — structured professional work experiences with clean bullet points",
+              "educationFormatted": "string — structured education history",
+              "skillsFormatted": "string — structured skills list",
+              "projectsFormatted": "string — structured projects list",
+              "warnings": ["string"]
+            }
+
+            Input:
+            - Language: {{req.Language}}
+            - Summary: {{req.Summary}}
+            - Experience: {{req.Experience}}
+            - Education: {{req.Education}}
+            - Skills: {{req.Skills}}
+            - Projects: {{req.Projects}}
+            """;
+        }
+
+        private ResumeResult? TryParseResumeResponse(string raw, ResumeRequest fallback)
+        {
+            if (string.IsNullOrWhiteSpace(raw)) return null;
+
+            try
+            {
+                var clean = raw
+                    .Trim()
+                    .TrimStart('`')
+                    .TrimEnd('`')
+                    .Replace("```json", "")
+                    .Replace("```", "")
+                    .Trim();
+
+                var start = clean.IndexOf('{');
+                var end = clean.LastIndexOf('}');
+                if (start < 0 || end < 0 || end <= start) return null;
+                clean = clean[start..(end + 1)];
+
+                var parsed = JsonSerializer.Deserialize<ResumeResult>(clean,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                return parsed;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private ResumeResult RawResumeFallbackLayout(
+            ResumeRequest req,
+            List<string> attemptLog,
+            List<string> warnings,
+            string usedProvider = "fallback",
+            string usedModel = "none")
+        {
+            return new ResumeResult
+            {
+                SummaryFormatted = req.Summary,
+                ExperienceFormatted = req.Experience,
+                EducationFormatted = req.Education,
+                SkillsFormatted = req.Skills,
+                ProjectsFormatted = req.Projects,
                 UsedProvider = usedProvider,
                 UsedModel = usedModel,
                 AttemptLog = attemptLog,

@@ -32,7 +32,10 @@ export class SettingsComponent implements OnInit {
       linkedInUrl: '',
       gitHubUrl: '',
       websiteUrl: '',
-      address: ''
+      address: '',
+      addresses: [],
+      role: '',
+      footerText: ''
     }
   });
 
@@ -134,6 +137,13 @@ export class SettingsComponent implements OnInit {
           // Normalize priority list just in case
           if (!s.providerPriority || s.providerPriority.length === 0) {
             s.providerPriority = [...this.allProviders];
+          }
+          if (s.profile) {
+            if (!s.profile.addresses) {
+              s.profile.addresses = s.profile.address ? [s.profile.address] : [];
+            }
+            if (!s.profile.role) s.profile.role = '';
+            if (!s.profile.footerText) s.profile.footerText = '';
           }
           this.settings.set(s);
         }
@@ -248,6 +258,48 @@ export class SettingsComponent implements OnInit {
           success: false,
           message: 'Failed to save MCP config before testing.'
         });
+      }
+    });
+  }
+
+  addAddress(val: string) {
+    if (!val || !val.trim()) return;
+    const current = { ...this.settings() };
+    if (!current.profile.addresses) {
+      current.profile.addresses = [];
+    }
+    current.profile.addresses.push(val.trim());
+    if (!current.profile.address) {
+      current.profile.address = val.trim();
+    }
+    this.settings.set(current);
+  }
+
+  removeAddress(index: number) {
+    const current = { ...this.settings() };
+    if (current.profile.addresses) {
+      current.profile.addresses.splice(index, 1);
+      if (current.profile.address === current.profile.addresses[index] || !current.profile.addresses.includes(current.profile.address)) {
+        current.profile.address = current.profile.addresses[0] || '';
+      }
+      this.settings.set(current);
+    }
+  }
+
+  clearCache() {
+    this.isLoading.set(true);
+    this.saveStatus.set(null);
+    this.settingsService.clearCache().subscribe({
+      next: (res) => {
+        this.isLoading.set(false);
+        this.saveStatus.set({ success: true, message: res.message || 'Cache cleared successfully!' });
+        setTimeout(() => this.saveStatus.set(null), 3000);
+      },
+      error: (err) => {
+        console.error('Failed to clear cache:', err);
+        this.isLoading.set(false);
+        this.saveStatus.set({ success: false, message: err.error?.error || 'Failed to clear cache.' });
+        setTimeout(() => this.saveStatus.set(null), 4000);
       }
     });
   }

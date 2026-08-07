@@ -57,4 +57,8 @@ export class SettingsService {
   deleteTemplate(id: string) {
     return this.http.delete<any>(`${this.base}/templates/${id}`);
   }
+
+  clearCache() {
+    return this.http.post<any>(`${this.base}/clear-cache`, {});
+  }
 }

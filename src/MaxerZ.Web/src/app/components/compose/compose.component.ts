@@ -20,6 +20,7 @@ export class ComposeComponent implements OnInit {
   rawRecipientInfo = signal('');
   existingCoverLetterBody = signal('');
   headerAddress = signal('');
+  addresses = signal<string[]>([]);
 
   // Option 2: AI Generation fields
   companyName = signal('');
@@ -75,6 +76,24 @@ export class ComposeComponent implements OnInit {
   }
 
   loadDraftOrProfile() {
+    // Always load addresses list from user settings profile
+    this.settingsService.getSettings().subscribe(s => {
+      if (s && s.profile) {
+        const list = s.profile.addresses || (s.profile.address ? [s.profile.address] : []);
+        this.addresses.set(list);
+        
+        // If no draft is loaded, default the active address to the first configured address
+        const draft = this.coverLetterService.getComposeState();
+        if (!draft) {
+          if (list.length > 0) {
+            this.headerAddress.set(list[0]);
+          } else {
+            this.headerAddress.set('Wiener Straße 20 / 1, 2442 Unterwaltersdorf');
+          }
+        }
+      }
+    });
+
     const draft = this.coverLetterService.getComposeState();
     if (draft) {
       this.activeOption.set(draft.mode || 'existing');
@@ -94,15 +113,6 @@ export class ComposeComponent implements OnInit {
       this.selectedTemplate.set(draft.selectedTemplate || 'template_1');
       this.headerAddress.set(draft.headerAddress || '');
       this.updatePlaceholder(draft.language || 'en');
-    } else {
-      // Prefill address from user settings profile
-      this.settingsService.getSettings().subscribe(s => {
-        if (s && s.profile && s.profile.address) {
-          this.headerAddress.set(s.profile.address);
-        } else {
-          this.headerAddress.set('Wiener Straße 20 / 1, 2442 Unterwaltersdorf');
-        }
-      });
     }
   }
 

@@ -13,7 +13,10 @@ namespace MaxerZ.Api.Models
         // If first model runs out of tokens, next is used automatically.
         public List<string> OpenRouterModelChain { get; set; } = new()
         {
-            "openrouter/free",
+            "moonshotai/kimi-k3",
+            "openai/gpt-4o",
+            "openai/gpt-5",
+            "deepseek/deepseek-chat",
             "meta-llama/llama-3-8b-instruct:free",
             "google/gemma-2-9b-it:free",
             "openchat/openchat-7b:free"
@@ -56,11 +59,16 @@ namespace MaxerZ.Api.Models
         public string LinkedInUrl { get; set; } = "";
         public string GitHubUrl { get; set; } = "";
         public string WebsiteUrl { get; set; } = "";
+        
+        public string Role { get; set; } = "";
+        public string FooterText { get; set; } = "";
 
         public string Address
         {
             get => string.IsNullOrWhiteSpace(_address) ? "Wiener Straße 20 / 1, 2442 Unterwaltersdorf" : _address;
             set => _address = value;
         }
+
+        public List<string> Addresses { get; set; } = new();
     }
 }
