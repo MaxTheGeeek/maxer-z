@@ -1,0 +1,132 @@
+name: Build and Release MaxerZ Desktop App
+
+on:
+  push:
+    tags:
+      - 'v*'
+    branches:
+      - release
+  workflow_dispatch:
+
+jobs:
+  build-macos:
+    name: Build macOS Release (.dmg & .pkg)
+    runs-on: macos-14
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Install MAUI Workload
+        run: dotnet workload install maui-maccatalyst
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Build Web Frontend
+        run: |
+          cd src/MaxerZ.Web
+          npm ci || npm install
+          npm run build
+
+      - name: Build & Publish macOS (.pkg)
+        run: |
+          dotnet publish src/MaxerZ.Maui/MaxerZ.Maui.csproj \
+            -c Release \
+            -f net10.0-maccatalyst \
+            -r maccatalyst-arm64 \
+            -p:CreatePackage=true
+
+      - name: Generate macOS DMG Disk Image
+        run: |
+          rm -rf dmg_temp
+          mkdir -p dmg_temp
+          cp -R src/MaxerZ.Maui/bin/Release/net10.0-maccatalyst/maccatalyst-arm64/MaxerZ.app dmg_temp/
+          ln -s /Applications dmg_temp/Applications
+          hdiutil create -volname "MaxerZ" -srcfolder dmg_temp -ov -format UDZO MaxerZ-macOS.dmg
+          cp src/MaxerZ.Maui/bin/Release/net10.0-maccatalyst/maccatalyst-arm64/publish/*.pkg MaxerZ-macOS.pkg || true
+
+      - name: Upload macOS Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-release
+          path: |
+            MaxerZ-macOS.dmg
+            MaxerZ-macOS.pkg
+
+  build-windows:
+    name: Build Windows Release (.exe ZIP)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Install MAUI Workload
+        run: dotnet workload install maui-windows
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Build Web Frontend
+        run: |
+          cd src\MaxerZ.Web
+          npm ci || npm install
+          npm run build
+
+      - name: Build & Publish Windows (.exe)
+        run: |
+          dotnet publish src/MaxerZ.Maui/MaxerZ.Maui.csproj `
+            -c Release `
+            -f net10.0-windows10.0.19041.0 `
+            -r win-x64 `
+            --self-contained true
+
+      - name: Compress Windows Output to ZIP
+        run: |
+          Compress-Archive -Path src\MaxerZ.Maui\bin\Release\net10.0-windows10.0.19041.0\win-x64\publish\* -DestinationPath MaxerZ-Windows-x64.zip
+
+      - name: Upload Windows Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-release
+          path: MaxerZ-Windows-x64.zip
+
+  create-github-release:
+    name: Create GitHub Release
+    needs: [build-macos, build-windows]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: write
+    steps:
+      - name: Download macOS Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-release
+          path: release-assets/
+
+      - name: Download Windows Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-release
+          path: release-assets/
+
+      - name: Create Release on GitHub
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release-assets/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
