@@ -1,8 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">net10.0-windows10.0.19041.0;net10.0-maccatalyst</TargetFrameworks>
-		<TargetFrameworks Condition="!$([MSBuild]::IsOSPlatform('windows'))">net10.0-maccatalyst;net10.0-windows10.0.19041.0</TargetFrameworks>
+		<TargetFrameworks>net10.0-windows10.0.19041.0</TargetFrameworks>
 		<OutputType>Exe</OutputType>
 		<RootNamespace>MaxerZ.Maui</RootNamespace>
 		<UseMaui>true</UseMaui>
@@ -10,6 +9,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<MauiXamlInflator>SourceGen</MauiXamlInflator>
+		<RollForward>LatestPatch</RollForward>
 
 		<!-- Display name -->
 		<ApplicationTitle>MaxerZ</ApplicationTitle>
@@ -25,11 +25,13 @@
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
 		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
 		<EnableWindowsTargeting>true</EnableWindowsTargeting>
+		<WindowsPackageType Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">None</WindowsPackageType>
+		<AppHostDotNetSearch Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">Global</AppHostDotNetSearch>
 		<ValidateXcodeVersion>false</ValidateXcodeVersion>
 		<ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+	<PropertyGroup Condition="'$(Configuration)' == 'Release' and $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">
 		<RunAOTCompilation>false</RunAOTCompilation>
 		<UseInterpreter>true</UseInterpreter>
 		<MtouchInterpreter>all</MtouchInterpreter>
@@ -75,7 +77,7 @@
 
 	<Target Name="PublishApiBeforeBuild" BeforeTargets="BeforeBuild">
 		<Exec Command="dotnet publish ../MaxerZ.Api/MaxerZ.Api.csproj -c $(Configuration) -r osx-arm64 --self-contained true" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'" />
-		<Exec Command="dotnet publish ../MaxerZ.Api/MaxerZ.Api.csproj -c $(Configuration) -r win-x64 --self-contained true" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'" />
+		<Exec Command="dotnet publish ../MaxerZ.Api/MaxerZ.Api.csproj -c $(Configuration) -r win-x64 --self-contained false" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'" />
 	</Target>
 
 	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">
@@ -85,6 +87,7 @@
 
 	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
 		<ReferenceCopyLocalPaths Include="..\MaxerZ.Api\bin\$(Configuration)\net10.0\win-x64\publish\*.dll" />
+		<ReferenceCopyLocalPaths Remove="..\MaxerZ.Api\bin\$(Configuration)\net10.0\win-x64\publish\MaxerZ.Api.dll" />
 	</ItemGroup>
 
 	<ItemGroup>
