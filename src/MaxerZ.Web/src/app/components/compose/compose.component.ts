@@ -88,7 +88,7 @@ export class ComposeComponent implements OnInit {
           if (list.length > 0) {
             this.headerAddress.set(list[0]);
           } else {
-            this.headerAddress.set('Wiener Straße 20 / 1, 2442 Unterwaltersdorf');
+            this.headerAddress.set('Musterstraße 1, 1010 Wien');
           }
         }
       }
@@ -273,7 +273,7 @@ export class ComposeComponent implements OnInit {
       if (s && s.profile && s.profile.address) {
         this.headerAddress.set(s.profile.address);
       } else {
-        this.headerAddress.set('Wiener Straße 20 / 1, 2442 Unterwaltersdorf');
+        this.headerAddress.set('Musterstraße 1, 1010 Wien');
       }
     });
   }

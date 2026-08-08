@@ -51,9 +51,9 @@ namespace MaxerZ.Api.Models
 
     public class UserProfile
     {
-        private string _address = "Wiener Straße 20 / 1, 2442 Unterwaltersdorf";
+        private string _address = "Musterstraße 1, 1010 Wien";
 
-        public string FullName { get; set; } = "Majid Behzadi";
+        public string FullName { get; set; } = "Max Mustermann";
         public string Email { get; set; } = "";
         public string Phone { get; set; } = "";
         public string LinkedInUrl { get; set; } = "";
@@ -65,7 +65,7 @@ namespace MaxerZ.Api.Models
 
         public string Address
         {
-            get => string.IsNullOrWhiteSpace(_address) ? "Wiener Straße 20 / 1, 2442 Unterwaltersdorf" : _address;
+            get => string.IsNullOrWhiteSpace(_address) ? "Musterstraße 1, 1010 Wien" : _address;
             set => _address = value;
         }
 

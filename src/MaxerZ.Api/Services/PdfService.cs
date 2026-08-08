@@ -53,13 +53,13 @@ namespace MaxerZ.Api.Services
 
             // Load profile settings
             var profile = _settings.Get().Profile;
-            var name = string.IsNullOrWhiteSpace(profile.FullName) ? "MAJID BEHZADI" : profile.FullName.ToUpper();
-            var role = string.IsNullOrWhiteSpace(profile.Role) ? "Full-Stack Engineer | C# & ASP.NET Core | TypeScript & JavaScript" : profile.Role;
-            var phone = string.IsNullOrWhiteSpace(profile.Phone) ? "+43 6769701820" : profile.Phone;
-            var email = string.IsNullOrWhiteSpace(profile.Email) ? "maxbehzadi82@gmail.com" : profile.Email;
-            var linkedin = string.IsNullOrWhiteSpace(profile.LinkedInUrl) ? "linkedin.com/in/maxii" : profile.LinkedInUrl;
-            var website = string.IsNullOrWhiteSpace(profile.WebsiteUrl) ? "maxbehzadi.online" : profile.WebsiteUrl;
-            var github = string.IsNullOrWhiteSpace(profile.GitHubUrl) ? "github.com/MaxTheGeeek" : profile.GitHubUrl;
+            var name = string.IsNullOrWhiteSpace(profile.FullName) ? "MAX MUSTERMANN" : profile.FullName.ToUpper();
+            var role = string.IsNullOrWhiteSpace(profile.Role) ? "Software Engineer | C# & .NET | TypeScript & Angular" : profile.Role;
+            var phone = string.IsNullOrWhiteSpace(profile.Phone) ? "+43 123 4567890" : profile.Phone;
+            var email = string.IsNullOrWhiteSpace(profile.Email) ? "max.mustermann@muster.com" : profile.Email;
+            var linkedin = string.IsNullOrWhiteSpace(profile.LinkedInUrl) ? "linkedin.com/in/muster" : profile.LinkedInUrl;
+            var website = string.IsNullOrWhiteSpace(profile.WebsiteUrl) ? "www.muster.com" : profile.WebsiteUrl;
+            var github = string.IsNullOrWhiteSpace(profile.GitHubUrl) ? "github.com/muster" : profile.GitHubUrl;
 
             // Line 1: Name
             DrawCenteredSegments(gfx, 50, new TextSegment
@@ -87,7 +87,7 @@ namespace MaxerZ.Api.Services
 
             // Line 4: GitHub & Address
             var addressText = string.IsNullOrWhiteSpace(request.HeaderAddress) 
-                ? (profile.Address ?? "Wiener Straße 20 / 1, 2442 Unterwaltersdorf")
+                ? (profile.Address ?? "Musterstraße 1, 1010 Wien")
                 : request.HeaderAddress;
 
             DrawCenteredSegments(gfx, 98, 
@@ -268,13 +268,13 @@ namespace MaxerZ.Api.Services
 
             // Load profile settings
             var profile = _settings.Get().Profile;
-            var name = string.IsNullOrWhiteSpace(profile.FullName) ? "MAJID BEHZADI" : profile.FullName.ToUpper();
-            var role = string.IsNullOrWhiteSpace(profile.Role) ? "Full-Stack Engineer | C# & ASP.NET Core | TypeScript & JavaScript" : profile.Role;
-            var phone = string.IsNullOrWhiteSpace(profile.Phone) ? "+43 6769701820" : profile.Phone;
-            var email = string.IsNullOrWhiteSpace(profile.Email) ? "maxbehzadi82@gmail.com" : profile.Email;
-            var linkedin = string.IsNullOrWhiteSpace(profile.LinkedInUrl) ? "linkedin.com/in/maxii" : profile.LinkedInUrl;
-            var website = string.IsNullOrWhiteSpace(profile.WebsiteUrl) ? "maxbehzadi.online" : profile.WebsiteUrl;
-            var github = string.IsNullOrWhiteSpace(profile.GitHubUrl) ? "github.com/MaxTheGeeek" : profile.GitHubUrl;
+            var name = string.IsNullOrWhiteSpace(profile.FullName) ? "MAX MUSTERMANN" : profile.FullName.ToUpper();
+            var role = string.IsNullOrWhiteSpace(profile.Role) ? "Software Engineer | C# & .NET | TypeScript & Angular" : profile.Role;
+            var phone = string.IsNullOrWhiteSpace(profile.Phone) ? "+43 123 4567890" : profile.Phone;
+            var email = string.IsNullOrWhiteSpace(profile.Email) ? "max.mustermann@muster.com" : profile.Email;
+            var linkedin = string.IsNullOrWhiteSpace(profile.LinkedInUrl) ? "linkedin.com/in/muster" : profile.LinkedInUrl;
+            var website = string.IsNullOrWhiteSpace(profile.WebsiteUrl) ? "www.muster.com" : profile.WebsiteUrl;
+            var github = string.IsNullOrWhiteSpace(profile.GitHubUrl) ? "github.com/muster" : profile.GitHubUrl;
 
             // Line 1: Name
             DrawCenteredSegments(gfx, 50, new TextSegment
@@ -302,7 +302,7 @@ namespace MaxerZ.Api.Services
 
             // Line 4: GitHub & Address
             var addressText = string.IsNullOrWhiteSpace(request.HeaderAddress) 
-                ? (profile.Address ?? "Wiener Straße 20 / 1, 2442 Unterwaltersdorf")
+                ? (profile.Address ?? "Musterstraße 1, 1010 Wien")
                 : request.HeaderAddress;
 
             DrawCenteredSegments(gfx, 98, 

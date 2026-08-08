@@ -162,7 +162,7 @@ PREVIEW_RESP=$(curl -s -X POST http://localhost:"$PORT"/api/coverletter/preview 
     "position":"Software Engineer",
     "companyLocation":"1010 Vienna",
     "language":"en",
-    "coverLetterBody":"Dear Hiring Manager,\n\nI am applying for this role.\n\nBest regards,\nMajid Behzadi"
+    "coverLetterBody":"Dear Hiring Manager,\n\nI am applying for this role.\n\nBest regards,\nMax Mustermann"
   }')
 
 WAS_FALLBACK=$(echo "$PREVIEW_RESP" | jq -r '.wasFallback')
@@ -197,7 +197,7 @@ EXPORT_RESP=$(curl -s -X POST http://localhost:"$PORT"/api/coverletter/export \
     "position":"Software Engineer",
     "companyLocation":"1010 Vienna",
     "language":"en",
-    "coverLetterBody":"Dear Hiring Manager,\n\nI am applying for this role.\n\nBest regards,\nMajid Behzadi"
+    "coverLetterBody":"Dear Hiring Manager,\n\nI am applying for this role.\n\nBest regards,\nMax Mustermann"
   }')
 
 PDF_PATH=$(echo "$EXPORT_RESP" | jq -r '.pdfPath')
@@ -244,7 +244,7 @@ DE_PREVIEW_RESP=$(curl -s -X POST http://localhost:"$PORT"/api/coverletter/previ
     "position":"Softwareentwickler",
     "companyLocation":"4600 Wels",
     "language":"de",
-    "coverLetterBody":"Sehr geehrte Damen und Herren,\n\nIch bewerbe mich für diese Stelle.\n\nMit freundlichen Grüßen,\nMajid Behzadi"
+    "coverLetterBody":"Sehr geehrte Damen und Herren,\n\nIch bewerbe mich für diese Stelle.\n\nMit freundlichen Grüßen,\nMax Mustermann"
   }')
 
 DE_CLOSING=$(echo "$DE_PREVIEW_RESP" | jq -r '.layout.closingLine')
@@ -283,7 +283,7 @@ curl -s -X POST http://localhost:"$PORT"/api/coverletter/preview \
     "position":"Software Engineer",
     "companyLocation":"1010 Vienna",
     "language":"en",
-    "coverLetterBody":"Dear Hiring Manager,\n\nI am applying for this role.\n\nBest regards,\nMajid Behzadi"
+    "coverLetterBody":"Dear Hiring Manager,\n\nI am applying for this role.\n\nBest regards,\nMax Mustermann"
   }' > /dev/null
 END_TIME=$(date +%s)
 DURATION=$((END_TIME - START_TIME))
