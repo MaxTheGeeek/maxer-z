@@ -7,9 +7,27 @@ using Microsoft.Maui.ApplicationModel;
 #if IOS || MACCATALYST
 using UIKit;
 using Foundation;
+using WebKit;
 #endif
 
 namespace MaxerZ.Maui;
+
+#if IOS || MACCATALYST
+internal class CustomNavigationDelegate : WKNavigationDelegate
+{
+    private readonly Action _onProcessTerminated;
+    public CustomNavigationDelegate(Action onProcessTerminated)
+    {
+        _onProcessTerminated = onProcessTerminated;
+    }
+
+    public override void ContentProcessDidTerminate(WKWebView webView)
+    {
+        System.Diagnostics.Debug.WriteLine("WKWebView WebContent process terminated. Automatically recovering...");
+        _onProcessTerminated?.Invoke();
+    }
+}
+#endif
 
 public partial class MainPage : ContentPage
 {
@@ -23,6 +41,30 @@ public partial class MainPage : ContentPage
         InitializeComponent();
         _ = LoadAppAsync();
         StartWebViewHealthCheck();
+    }
+
+    protected override void OnHandlerChanged()
+    {
+        base.OnHandlerChanged();
+#if IOS || MACCATALYST
+        if (MainWebView.Handler?.PlatformView is WKWebView wkWebView)
+        {
+            wkWebView.NavigationDelegate = new CustomNavigationDelegate(RecoverWebView);
+        }
+#endif
+    }
+
+    private void RecoverWebView()
+    {
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            if (!string.IsNullOrEmpty(_lastLoadedUrl))
+            {
+                System.Diagnostics.Debug.WriteLine($"Recovering WebView by re-setting Source: {_lastLoadedUrl}");
+                MainWebView.Source = null;
+                MainWebView.Source = _lastLoadedUrl;
+            }
+        });
     }
 
     private async Task LoadAppAsync()
@@ -61,12 +103,12 @@ public partial class MainPage : ContentPage
 
     private void StartWebViewHealthCheck()
     {
-        // Start a background loop to verify webview responsiveness every 15 seconds
+        // Start a background loop to verify webview responsiveness every 30 seconds
         Task.Run(async () =>
         {
             while (true)
             {
-                await Task.Delay(TimeSpan.FromSeconds(15));
+                await Task.Delay(TimeSpan.FromSeconds(30));
                 try
                 {
                     await MainThread.InvokeOnMainThreadAsync(async () =>
@@ -76,16 +118,17 @@ public partial class MainPage : ContentPage
                             try
                             {
                                 var test = await MainWebView.EvaluateJavaScriptAsync("1+1");
-                                if (test != "2")
+                                var cleanTest = test?.Trim()?.Trim('"');
+                                if (cleanTest != "2")
                                 {
-                                    System.Diagnostics.Debug.WriteLine("WebView health check failed (unexpected result). Reloading.");
-                                    MainWebView.Reload();
+                                    System.Diagnostics.Debug.WriteLine($"WebView health check failed (got '{test}'). Recovering.");
+                                    RecoverWebView();
                                 }
                             }
                             catch (Exception ex)
                             {
-                                System.Diagnostics.Debug.WriteLine($"WebView health check threw exception: {ex.Message}. Reloading.");
-                                MainWebView.Reload();
+                                System.Diagnostics.Debug.WriteLine($"WebView health check threw exception: {ex.Message}. Recovering.");
+                                RecoverWebView();
                             }
                         }
                     });
@@ -130,19 +173,21 @@ public partial class MainPage : ContentPage
                 try
                 {
                     var test = await MainWebView.EvaluateJavaScriptAsync("1+1");
-                    if (test != "2")
+                    var cleanTest = test?.Trim()?.Trim('"');
+                    if (cleanTest != "2")
                     {
-                        System.Diagnostics.Debug.WriteLine("App active focus: WebView health check failed. Reloading.");
-                        MainWebView.Reload();
+                        System.Diagnostics.Debug.WriteLine("App active focus: WebView health check failed. Recovering.");
+                        RecoverWebView();
                     }
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"App active focus: WebView exception {ex.Message}. Reloading.");
-                    MainWebView.Reload();
+                    System.Diagnostics.Debug.WriteLine($"App active focus: WebView exception {ex.Message}. Recovering.");
+                    RecoverWebView();
                 }
             }
         });
     }
 #endif
 }
+

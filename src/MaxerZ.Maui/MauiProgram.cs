@@ -98,6 +98,17 @@ public static class MauiProgram
 				fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
 			});
 
+#if MACCATALYST || IOS
+		Microsoft.Maui.Handlers.WebViewHandler.Mapper.AppendToMapping("EnableDeveloperExtras", (handler, view) =>
+		{
+			if (OperatingSystem.IsIOSVersionAtLeast(16, 4) || OperatingSystem.IsMacCatalystVersionAtLeast(16, 4))
+			{
+				handler.PlatformView.Inspectable = true;
+			}
+			handler.PlatformView.Configuration.Preferences.SetValueForKey(Foundation.NSObject.FromObject(true), new Foundation.NSString("developerExtrasEnabled"));
+		});
+#endif
+
 #if DEBUG
 		builder.Logging.AddDebug();
 #endif

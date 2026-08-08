@@ -82,35 +82,25 @@ namespace MaxerZ.Api
             
             // Serve Angular static files from wwwroot or wwwroot/browser in production
             var browserPath = Path.Combine(builder.Environment.WebRootPath, "browser");
+            Microsoft.Extensions.FileProviders.IFileProvider fileProvider;
             if (Directory.Exists(browserPath))
             {
-                app.UseDefaultFiles(new DefaultFilesOptions
-                {
-                    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(browserPath)
-                });
-                app.UseStaticFiles(new StaticFileOptions
-                {
-                    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(browserPath)
-                });
+                fileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(browserPath);
             }
             else if (Directory.Exists(builder.Environment.WebRootPath))
             {
-                app.UseDefaultFiles(new DefaultFilesOptions
-                {
-                    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(builder.Environment.WebRootPath)
-                });
-                app.UseStaticFiles(new StaticFileOptions
-                {
-                    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(builder.Environment.WebRootPath)
-                });
+                fileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(builder.Environment.WebRootPath);
             }
             else
             {
-                app.UseDefaultFiles();
-                app.UseStaticFiles();
+                fileProvider = builder.Environment.ContentRootFileProvider;
             }
 
+            app.UseDefaultFiles(new DefaultFilesOptions { FileProvider = fileProvider });
+            app.UseStaticFiles(new StaticFileOptions { FileProvider = fileProvider });
+
             app.MapControllers();
+            app.MapFallbackToFile("index.html", new StaticFileOptions { FileProvider = fileProvider });
 
             // Find free port and write to temp file for MAUI to read
             var port = FindFreePort();
