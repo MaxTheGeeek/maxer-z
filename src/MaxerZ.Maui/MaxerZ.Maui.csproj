@@ -25,6 +25,7 @@
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
 		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
 		<EnableWindowsTargeting>true</EnableWindowsTargeting>
+		<WindowsPackageType Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">None</WindowsPackageType>
 		<ValidateXcodeVersion>false</ValidateXcodeVersion>
 		<ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>
 	</PropertyGroup>
@@ -74,21 +75,21 @@
 	</Target>
 
 	<Target Name="PublishApiBeforeBuild" BeforeTargets="BeforeBuild">
-		<Exec Command="dotnet publish ../MaxerZ.Api/MaxerZ.Api.csproj -c $(Configuration) -r osx-arm64 --self-contained true" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'" />
-		<Exec Command="dotnet publish ../MaxerZ.Api/MaxerZ.Api.csproj -c $(Configuration) -r win-x64 --self-contained true" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'" />
+		<Exec Command="dotnet publish &quot;$(MSBuildThisFileDirectory)..\MaxerZ.Api\MaxerZ.Api.csproj&quot; -c $(Configuration) -r osx-arm64 --self-contained true" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'" />
+		<Exec Command="dotnet publish &quot;$(MSBuildThisFileDirectory)..\MaxerZ.Api\MaxerZ.Api.csproj&quot; -c $(Configuration) -r win-x64 --self-contained true" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'" />
 	</Target>
 
 	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">
-		<ReferenceCopyLocalPaths Include="..\MaxerZ.Api\bin\$(Configuration)\net10.0\osx-arm64\publish\*.dll" />
-		<ReferenceCopyLocalPaths Include="..\MaxerZ.Api\bin\$(Configuration)\net10.0\osx-arm64\publish\*.dylib" />
+		<ReferenceCopyLocalPaths Include="$(MSBuildThisFileDirectory)..\MaxerZ.Api\bin\$(Configuration)\net10.0\osx-arm64\publish\*.dll" />
+		<ReferenceCopyLocalPaths Include="$(MSBuildThisFileDirectory)..\MaxerZ.Api\bin\$(Configuration)\net10.0\osx-arm64\publish\*.dylib" />
 	</ItemGroup>
 
 	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
-		<ReferenceCopyLocalPaths Include="..\MaxerZ.Api\bin\$(Configuration)\net10.0\win-x64\publish\*.dll" />
+		<ReferenceCopyLocalPaths Include="$(MSBuildThisFileDirectory)..\MaxerZ.Api\bin\$(Configuration)\net10.0\win-x64\publish\*.dll" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<Content Include="..\MaxerZ.Api\wwwroot\**" Link="wwwroot\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="Always" />
+		<Content Include="$(MSBuildThisFileDirectory)..\MaxerZ.Api\wwwroot\**" Link="wwwroot\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="Always" />
 	</ItemGroup>
 
 </Project>

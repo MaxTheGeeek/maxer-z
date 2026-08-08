@@ -71,7 +71,7 @@ public partial class MainPage : ContentPage
     {
         var port = 0;
         
-        // Wait up to 12 seconds for the active port to be initialized in-process
+        // Wait up to 12 seconds for the active port to be initialized in-process or via temp file
         for (int i = 0; i < 24; i++)
         {
             if (MaxerZ.Api.Program.ActivePort > 0)
@@ -79,6 +79,22 @@ public partial class MainPage : ContentPage
                 port = MaxerZ.Api.Program.ActivePort;
                 break;
             }
+
+            var tempPortFile = Path.Combine(Path.GetTempPath(), "maxerz_port.txt");
+            if (File.Exists(tempPortFile))
+            {
+                try
+                {
+                    var text = File.ReadAllText(tempPortFile)?.Trim();
+                    if (int.TryParse(text, out var p) && p > 0)
+                    {
+                        port = p;
+                        break;
+                    }
+                }
+                catch { }
+            }
+
             await Task.Delay(500);
         }
 
