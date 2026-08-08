@@ -1,0 +1,75 @@
+name: Staging CI & Auto-Merge to Main
+
+on:
+  push:
+    branches:
+      - stage
+  pull_request:
+    branches:
+      - stage
+
+jobs:
+  test-frontend:
+    name: 🧪 Step 1: Test & Build Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Dependencies
+        run: |
+          cd src/MaxerZ.Web
+          npm ci || npm install
+
+      - name: Build Web App
+        run: |
+          cd src/MaxerZ.Web
+          npm run build
+
+  test-backend-and-maui:
+    name: 🧪 Step 2: Test & Verify .NET Backend
+    runs-on: macos-14
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Install MAUI Workload
+        run: dotnet workload install maui-maccatalyst
+
+      - name: Verify .NET API Build
+        run: dotnet build src/MaxerZ.Api/MaxerZ.Api.csproj -c Release
+
+      - name: Verify MAUI Build
+        run: dotnet build src/MaxerZ.Maui/MaxerZ.Maui.csproj -c Release -f net10.0-maccatalyst
+
+  auto-merge-to-main:
+    name: 🔄 Step 3: Auto-Merge Stage into Main
+    needs: [test-frontend, test-backend-and-maui]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/stage'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Main Branch
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Merge Stage into Main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin stage
+          git merge origin/stage --no-ff -m "ci: auto-merge stage into main after successful tests"
+          git push origin main
