@@ -1,4 +1,4 @@
-name: Build & Release MaxerZ Desktop App
+name: "Build & Release MaxerZ Desktop App"
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
 
 jobs:
   run-tests:
-    name: 🧪 Step 1: Quality Gate & Test Verification
+    name: "🧪 Step 1: Quality Gate & Test Verification"
     runs-on: macos-14
     steps:
       - name: Checkout Code
@@ -42,7 +42,7 @@ jobs:
         run: dotnet build src/MaxerZ.Maui/MaxerZ.Maui.csproj -c Release -f net10.0-maccatalyst
 
   build-macos:
-    name: 🍏 Step 2a: Build macOS Package (.dmg & .pkg)
+    name: "🍏 Step 2a: Build macOS Package (.dmg & .pkg)"
     needs: run-tests
     runs-on: macos-14
     steps:
@@ -94,7 +94,7 @@ jobs:
             MaxerZ-macOS.pkg
 
   build-windows:
-    name: 🪟 Step 2b: Build Windows Package (.exe ZIP)
+    name: "🪟 Step 2b: Build Windows Package (.exe ZIP)"
     needs: run-tests
     runs-on: windows-latest
     steps:
@@ -139,7 +139,7 @@ jobs:
           path: MaxerZ-Windows-x64.zip
 
   publish-release:
-    name: 🚀 Step 3: Create & Publish GitHub Release
+    name: "🚀 Step 3: Create & Publish GitHub Release"
     needs: [build-macos, build-windows]
     runs-on: ubuntu-latest
     permissions:
@@ -160,7 +160,7 @@ jobs:
       - name: Create Release on GitHub
         uses: softprops/action-gh-release@v2
         with:
-          name: MaxerZ Desktop ${{ github.ref_name }}
+          name: "MaxerZ Desktop ${{ github.ref_name }}"
           generate_release_notes: true
           files: release-assets/*
         env:

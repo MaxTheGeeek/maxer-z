@@ -1,4 +1,4 @@
-name: Staging CI & Auto-Merge to Main
+name: "Staging CI & Auto-Merge to Main"
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
 
 jobs:
   test-frontend:
-    name: 🧪 Step 1: Test & Build Frontend
+    name: "🧪 Step 1: Test & Build Frontend"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -32,7 +32,7 @@ jobs:
           npm run build
 
   test-backend-and-maui:
-    name: 🧪 Step 2: Test & Verify .NET Backend
+    name: "🧪 Step 2: Test & Verify .NET Backend"
     runs-on: macos-14
     steps:
       - name: Checkout Code
@@ -53,7 +53,7 @@ jobs:
         run: dotnet build src/MaxerZ.Maui/MaxerZ.Maui.csproj -c Release -f net10.0-maccatalyst
 
   auto-merge-to-main:
-    name: 🔄 Step 3: Auto-Merge Stage into Main
+    name: "🔄 Step 3: Auto-Merge Stage into Main"
     needs: [test-frontend, test-backend-and-maui]
     if: github.event_name == 'push' && github.ref == 'refs/heads/stage'
     runs-on: ubuntu-latest
