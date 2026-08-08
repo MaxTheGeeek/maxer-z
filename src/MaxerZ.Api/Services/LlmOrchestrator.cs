@@ -349,7 +349,7 @@ namespace MaxerZ.Api.Services
 
             var salutation = "";
             var closing = "";
-            var signer = cfg.Profile.FullName ?? "Majid Behzadi";
+            var signer = cfg.Profile.FullName ?? "Max Mustermann";
             var body = new List<string>();
 
             if (req.Mode != "existing" && lines.Count == 0)
@@ -386,8 +386,8 @@ namespace MaxerZ.Api.Services
                     l.Contains("freundlichen", StringComparison.OrdinalIgnoreCase)) ?? "";
 
                 signer = lines.LastOrDefault(l =>
-                    l.Contains("Behzadi", StringComparison.OrdinalIgnoreCase) ||
-                    l.Contains("Majid", StringComparison.OrdinalIgnoreCase)) ?? (cfg.Profile.FullName ?? "Majid Behzadi");
+                    l.Contains("Mustermann", StringComparison.OrdinalIgnoreCase) ||
+                    l.Contains("Muster", StringComparison.OrdinalIgnoreCase)) ?? (cfg.Profile.FullName ?? "Max Mustermann");
 
                 // Body = everything that is not salutation, closing, or signer
                 var skip = new HashSet<string> { salutation, closing, signer };

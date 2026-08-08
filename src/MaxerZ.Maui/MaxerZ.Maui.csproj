@@ -15,7 +15,7 @@
 		<ApplicationTitle>MaxerZ</ApplicationTitle>
 
 		<!-- App Identifier -->
-		<ApplicationId>com.majid.maxerz</ApplicationId>
+		<ApplicationId>com.maxerz.app</ApplicationId>
 
 		<!-- Versions -->
 		<ApplicationDisplayVersion>1.4.1</ApplicationDisplayVersion>
