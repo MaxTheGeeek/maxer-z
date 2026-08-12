@@ -37,13 +37,11 @@ export class App implements OnInit {
   loadThemeAndUser() {
     this.settingsService.getSettings().subscribe({
       next: (settings) => {
-        if (settings) {
-          const theme = settings.theme || 'dark';
-          document.documentElement.setAttribute('data-theme', theme);
-        }
+        const theme = (settings && settings.theme) ? settings.theme : 'light';
+        document.documentElement.setAttribute('data-theme', theme);
       },
       error: () => {
-        document.documentElement.setAttribute('data-theme', 'dark');
+        document.documentElement.setAttribute('data-theme', 'light');
       }
     });
   }

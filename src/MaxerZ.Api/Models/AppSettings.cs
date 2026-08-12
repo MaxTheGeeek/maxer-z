@@ -44,7 +44,7 @@ namespace MaxerZ.Api.Models
         };
 
         // === App ===
-        public string Theme { get; set; } = "dark";
+        public string Theme { get; set; } = "light";
         public string ExportDirectory { get; set; } = "~/Documents/MaxerZ";
 
         // === Supabase Cloud Database & Auth ===
