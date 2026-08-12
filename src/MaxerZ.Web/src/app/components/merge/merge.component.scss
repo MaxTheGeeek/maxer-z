@@ -283,24 +283,31 @@
   }
 }
 
-.btn-success {
-  background: #10b981;
-  color: #fff;
+.download-btn, .btn-success {
+  background: var(--accent-green);
+  color: #ffffff;
   border: none;
   border-radius: 8px;
-  padding: 12px 20px;
+  padding: 10px 20px;
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  width: 100%;
-  transition: background 0.2s;
+  width: auto;
+  transition: all 0.2s ease;
+
+  .btn-icon {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
 
   &:hover {
     background: #059669;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
   }
 }
 
