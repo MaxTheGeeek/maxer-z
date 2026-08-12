@@ -29,14 +29,44 @@
       display: flex;
       align-items: center;
       text-decoration: none;
+      user-select: none;
 
-      .brand-logo {
-        height: 36px;
-        max-width: 140px;
-        object-fit: contain;
+      .brand-logo-text {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        font-size: 25px;
+        letter-spacing: -0.03em;
+        display: flex;
+        align-items: center;
+        line-height: 1;
 
-        &.light-logo-only {
-          display: none;
+        .logo-m {
+          font-weight: 900;
+          color: var(--text-primary);
+        }
+
+        .logo-axer {
+          font-weight: 800;
+          color: var(--text-primary);
+        }
+
+        .logo-fire-z {
+          font-weight: 900;
+          font-style: italic;
+          display: inline-block;
+          transform: skewX(-10deg);
+          margin-left: 2px;
+          background: linear-gradient(135deg, #ff4500 0%, #f97316 50%, #fbbf24 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          filter: drop-shadow(0 2px 8px rgba(249, 115, 22, 0.35));
+          transition: transform 0.2s ease, filter 0.2s ease;
+        }
+      }
+
+      &:hover {
+        .logo-fire-z {
+          transform: skewX(-12deg) scale(1.06);
+          filter: drop-shadow(0 3px 12px rgba(255, 69, 0, 0.6));
         }
       }
     }
@@ -189,16 +219,7 @@
   }
 }
 
-[data-theme="light"] {
-  .app-navbar .navbar-left .brand-logo {
-    &.dark-logo-only {
-      display: none;
-    }
-    &.light-logo-only {
-      display: block;
-    }
-  }
-}
+
 
 .main-content {
   flex: 1;
