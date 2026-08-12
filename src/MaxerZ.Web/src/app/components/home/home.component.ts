@@ -81,10 +81,10 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     // A. Glassmorphic 3D Main Resume Card
     const cardGeometry = new THREE.BoxGeometry(2.8, 3.8, 0.12);
     const cardMaterial = new THREE.MeshPhysicalMaterial({
-      color: 0x1e293b,
-      metalness: 0.2,
-      roughness: 0.1,
-      transmission: 0.6,
+      color: 0x3b82f6,
+      metalness: 0.1,
+      roughness: 0.2,
+      transmission: 0.7,
       transparent: true,
       opacity: 0.85,
       clearcoat: 1.0,
