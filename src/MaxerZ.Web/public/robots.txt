@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Allow: /home
+Allow: /ats
+Allow: /compose
+Allow: /resume
+Allow: /merge
+
+Disallow: /history
+Disallow: /settings
+
+Sitemap: https://maxer-z.vercel.app/sitemap.xml

@@ -3,6 +3,7 @@ import { ActivatedRoute, Router, RouterLink, RouterLinkActive, RouterOutlet } fr
 import { CommonModule } from '@angular/common';
 import { SettingsService } from './services/settings.service';
 import { AuthService } from './services/auth.service';
+import { SeoService } from './services/seo.service';
 import { AuthModalComponent } from './components/auth-modal/auth-modal.component';
 
 @Component({
@@ -18,6 +19,7 @@ export class App implements OnInit {
   constructor(
     private settingsService: SettingsService,
     public authService: AuthService,
+    private seoService: SeoService,
     private router: Router,
     private route: ActivatedRoute
   ) {}
