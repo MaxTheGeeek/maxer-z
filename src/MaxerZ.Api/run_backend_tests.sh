@@ -36,8 +36,9 @@ restart_api() {
   
   rm -f "$PORT_FILE"
   
+  SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
   echo "Starting API server in background..."
-  dotnet run --project src/MaxerZ.Api/ > /tmp/maxerz_test_api.log 2>&1 &
+  dotnet run --project "$SCRIPT_DIR/MaxerZ.Api.csproj" > /tmp/maxerz_test_api.log 2>&1 &
   local api_pid=$!
   
   # Wait for port file
@@ -88,12 +89,12 @@ fi
 # --- Test 2: Settings save and persist ---
 run_test "2" "Settings save and persist across restarts"
 TEST_THEME="light"
-TEST_NAME="Majid Test Persist"
+TEST_NAME="Alex Vance Test Persist"
 
 # Save settings
 SAVE_RESP=$(curl -s -X POST http://localhost:"$PORT"/api/settings \
   -H "Content-Type: application/json" \
-  -d '{"openRouterApiKey":"sk-or-test-key-saved","groqApiKey":"gsk-test-key-saved","ollamaBaseUrl":"http://ollama-test-saved:11434","theme":"'"$TEST_THEME"'","exportDirectory":"~/Documents/MaxerZ-Saved","profile":{"fullName":"'"$TEST_NAME"'","email":"majid@example.com","phone":"123","linkedInUrl":"li","gitHubUrl":"gh"},"providerPriority":["openrouter","groq","ollama"]}')
+  -d '{"openRouterApiKey":"sk-or-test-key-saved","groqApiKey":"gsk-test-key-saved","ollamaBaseUrl":"http://ollama-test-saved:11434","theme":"'"$TEST_THEME"'","exportDirectory":"~/Documents/MaxerZ-Saved","profile":{"fullName":"'"$TEST_NAME"'","email":"alex@example.com","phone":"123","linkedInUrl":"li","gitHubUrl":"gh"},"providerPriority":["openrouter","groq","ollama"]}')
 
 # Restart
 restart_api
@@ -295,15 +296,226 @@ else
   FAILED=$((FAILED+1))
 fi
 
+# --- Test 13: Resume Preview Endpoint ---
+run_test "13" "Resume Preview API endpoint"
+RESUME_PREVIEW_RESP=$(curl -s -X POST http://localhost:"$PORT"/api/resume/preview \
+  -H "Content-Type: application/json" \
+  -d '{
+    "summary":"Senior Developer with 8 years experience.",
+    "experience":"Lead Developer at Acme (2021-Present)",
+    "education":"B.Sc. CS at TU Wien",
+    "skills":"C#, .NET 10, Angular",
+    "projects":"MaxerZ Desktop App",
+    "language":"en",
+    "selectedTemplate":"template_1"
+  }')
+
+RESUME_PDF_BASE64=$(echo "$RESUME_PREVIEW_RESP" | jq -r '.pdfBase64')
+RESUME_WAS_FALLBACK=$(echo "$RESUME_PREVIEW_RESP" | jq -r '.wasFallback')
+
+if [ "$RESUME_WAS_FALLBACK" = "true" ] && [ -n "$RESUME_PDF_BASE64" ]; then
+  echo -e "${GREEN}PASS${NC}"
+else
+  echo -e "${RED}FAIL${NC}"
+  echo "Resume preview output: $RESUME_PREVIEW_RESP"
+  FAILED=$((FAILED+1))
+fi
+
+# --- Test 14: Resume Export and History Endpoints ---
+run_test "14" "Resume Export and History API endpoints"
+RESUME_EXPORT_RESP=$(curl -s -X POST http://localhost:"$PORT"/api/resume/export \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fullName":"Max Mustermann Custom",
+    "targetRole":"Lead Systems Architect",
+    "headerAddress":"Musterstraße 42, 1010 Wien",
+    "summary":"Senior Developer with 8 years experience.",
+    "experience":"Lead Developer at Acme (2021-Present)",
+    "education":"B.Sc. CS at TU Wien",
+    "skills":"C#, .NET 10, Angular",
+    "projects":"MaxerZ Desktop App",
+    "language":"en",
+    "selectedTemplate":"resume_template_1"
+  }')
+
+RESUME_HIST_RESP=$(curl -s -f http://localhost:"$PORT"/api/resume/history)
+RESUME_HIST_SUMMARY=$(echo "$RESUME_HIST_RESP" | jq -r '.[0].summary')
+
+if echo "$RESUME_HIST_SUMMARY" | grep -q "Senior Developer"; then
+  echo -e "${GREEN}PASS${NC}"
+else
+  echo -e "${RED}FAIL${NC}"
+  echo "Expected Senior Developer in resume history, got: '$RESUME_HIST_SUMMARY'"
+  FAILED=$((FAILED+1))
+fi
+
+# --- Test 15: Multi-page Resume PDF with FullName & TargetRole ---
+run_test "15" "Multi-page Resume PDF with custom header data"
+LONG_EXP=$(python3 -c 'print("Line " + "x"*80 + "\\n"*60)')
+MULTIPAGE_RESP=$(curl -s -X POST http://localhost:"$PORT"/api/resume/preview \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fullName":"Jane Doe",
+    "targetRole":"Principal Cloud Architect",
+    "headerAddress":"Hauptstraße 99, 1020 Wien",
+    "summary":"Accomplished Cloud Architect with extensive experience.",
+    "experience":"'"$LONG_EXP"'",
+    "education":"M.Sc. Software Engineering",
+    "skills":"AWS, Azure, GCP, Kubernetes",
+    "projects":"Enterprise Migration",
+    "language":"en",
+    "selectedTemplate":"resume_template_1"
+  }')
+
+MP_PDF_BASE64=$(echo "$MULTIPAGE_RESP" | jq -r '.pdfBase64')
+MP_HEADER=$(echo "$MP_PDF_BASE64" | base64 -d | head -c 4)
+
+if [ "$MP_HEADER" = "%PDF" ]; then
+  echo -e "${GREEN}PASS${NC}"
+else
+  echo -e "${RED}FAIL${NC}"
+  echo "Expected valid multi-page PDF output, got header: '$MP_HEADER'"
+  FAILED=$((FAILED+1))
+fi
+
+# --- Test 16: Languages and Reordered Section Sequence PDF ---
+run_test "16" "Languages list and custom section sequence rendering"
+REORDER_RESP=$(curl -s -X POST http://localhost:"$PORT"/api/resume/preview \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fullName":"Alex Vance",
+    "targetRole":"Full-Stack Engineer",
+    "summary":"Versatile engineer with strong computer science background.",
+    "experience":"Software Developer at TechCorp (2022-Present)",
+    "education":"B.Sc. Computer Science - TU Wien",
+    "skills":"C#, TypeScript, Angular",
+    "projects":"MaxerZ Platform",
+    "languages":[
+      {"language":"English","proficiency":"Native / Bilingual"},
+      {"language":"German","proficiency":"Full Professional (C2)"}
+    ],
+    "sectionOrder":["skills","education","experience","summary","projects","languages"],
+    "language":"en",
+    "selectedTemplate":"resume_template_1"
+  }')
+
+REORDER_PDF_BASE64=$(echo "$REORDER_RESP" | jq -r '.pdfBase64')
+REORDER_HEADER=$(echo "$REORDER_PDF_BASE64" | base64 -d | head -c 4)
+
+if [ "$REORDER_HEADER" = "%PDF" ]; then
+  echo -e "${GREEN}PASS${NC}"
+else
+  echo -e "${RED}FAIL${NC}"
+  echo "Expected valid PDF with reordered sections, got: '$REORDER_HEADER'"
+  FAILED=$((FAILED+1))
+fi
+
+# --- Test 17: PDF Merger Endpoint (POST /api/pdf/merge) ---
+run_test "17" "PDF Merger endpoint with multiple PDF files"
+echo "$RESUME_PDF_BASE64" | base64 -d > /tmp/pdf_test_1.pdf
+echo "$MP_PDF_BASE64" | base64 -d > /tmp/pdf_test_2.pdf
+
+MERGED_API_RESP=$(curl -s -X POST http://localhost:"$PORT"/api/pdf/merge \
+  -F "files=@/tmp/pdf_test_1.pdf" \
+  -F "files=@/tmp/pdf_test_2.pdf")
+
+MERGED_BASE64=$(echo "$MERGED_API_RESP" | jq -r '.pdfBase64')
+MERGED_PAGECOUNT=$(echo "$MERGED_API_RESP" | jq -r '.pageCount')
+MERGED_HEADER=$(echo "$MERGED_BASE64" | base64 -d | head -c 4)
+
+rm -f /tmp/pdf_test_1.pdf /tmp/pdf_test_2.pdf
+
+if [ "$MERGED_HEADER" = "%PDF" ] && [ "$MERGED_PAGECOUNT" -ge 2 ]; then
+  echo -e "${GREEN}PASS${NC} ($MERGED_PAGECOUNT pages merged)"
+else
+  echo -e "${RED}FAIL${NC}"
+  echo "Expected valid merged PDF response, got: '$MERGED_API_RESP'"
+  FAILED=$((FAILED+1))
+fi
+
+# --- Test 18: ATS Resume Review & Scoring (POST /api/ats/analyze) ---
+run_test "18" "ATS Resume Review & Scoring endpoint"
+ATS_API_RESP=$(curl -s -X POST http://localhost:"$PORT"/api/ats/analyze \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jobTitle": "Senior Software Engineer",
+    "seniorityLevel": "senior",
+    "targetArchetype": "technical",
+    "jobDescription": "Seeking a Senior Software Engineer with C#, .NET, and AWS expertise.",
+    "resumeText": "Alex Vance - Senior Software Engineer with 8 years building distributed microservices in C# and .NET Core. Led a team of 6 engineers."
+  }')
+
+ATS_SCORE=$(echo "$ATS_API_RESP" | jq -r '.overallScore')
+ATS_CONTENT_SUB=$(echo "$ATS_API_RESP" | jq -r '.subScores.contentRelevance')
+
+if [ "$ATS_SCORE" -ge 0 ] && [ "$ATS_CONTENT_SUB" -ge 0 ]; then
+  echo -e "${GREEN}PASS${NC} (Score: $ATS_SCORE/100, Content: $ATS_CONTENT_SUB/30)"
+else
+  echo -e "${RED}FAIL${NC}"
+  echo "Expected valid ATS score report response, got: '$ATS_API_RESP'"
+  FAILED=$((FAILED+1))
+fi
+
+# --- Test 19: User Registration, Login & JWT Bearer Profile ---
+run_test "19" "Open-source User Auth, Registration, Login & JWT Profile"
+TEST_EMAIL="user_$RANDOM@example.com"
+
+REG_RESP=$(curl -s -X POST http://localhost:"$PORT"/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"email\": \"$TEST_EMAIL\",
+    \"password\": \"SecurePassword123!\",
+    \"fullName\": \"Alex Vance\"
+  }")
+
+REG_SUCCESS=$(echo "$REG_RESP" | jq -r '.success')
+JWT_TOKEN=$(echo "$REG_RESP" | jq -r '.token')
+
+ME_RESP=$(curl -s -X GET http://localhost:"$PORT"/api/auth/me \
+  -H "Authorization: Bearer $JWT_TOKEN")
+
+ME_EMAIL=$(echo "$ME_RESP" | jq -r '.email')
+
+if [ "$REG_SUCCESS" = "true" ] && [ "$ME_EMAIL" = "$TEST_EMAIL" ]; then
+  echo -e "${GREEN}PASS${NC} (User registered & authenticated via JWT)"
+else
+  echo -e "${RED}FAIL${NC}"
+  echo "Expected successful auth response, got REG: '$REG_RESP', ME: '$ME_RESP'"
+  FAILED=$((FAILED+1))
+fi
+
+# --- Test 20: Google Auth Endpoint (POST /api/auth/google) ---
+run_test "20" "Google Auth & Auto-Registration endpoint"
+GOOGLE_TEST_EMAIL="google_user_$RANDOM@example.com"
+GOOGLE_RESP=$(curl -s -X POST http://localhost:"$PORT"/api/auth/google \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"email\": \"$GOOGLE_TEST_EMAIL\",
+    \"fullName\": \"Google Test User\",
+    \"googleUserId\": \"g-123456789\"
+  }")
+
+GOOGLE_SUCCESS=$(echo "$GOOGLE_RESP" | jq -r '.success')
+GOOGLE_JWT=$(echo "$GOOGLE_RESP" | jq -r '.token')
+
+if [ "$GOOGLE_SUCCESS" = "true" ] && [ -n "$GOOGLE_JWT" ]; then
+  echo -e "${GREEN}PASS${NC} (Google user auto-provisioned & issued JWT)"
+else
+  echo -e "${RED}FAIL${NC}"
+  echo "Expected valid Google auth response, got: '$GOOGLE_RESP'"
+  FAILED=$((FAILED+1))
+fi
+
 # --- Cleanup ---
 echo "Cleaning up..."
 kill_server
 rm -f "$PORT_FILE"
 
 if [ "$FAILED" -eq 0 ]; then
-  echo -e "\n${GREEN}ALL 12 TESTS PASSED! Ready for Phase 2.${NC}"
+  echo -e "\n${GREEN}ALL 20 TESTS PASSED! Ready for production.${NC}"
   exit 0
 else
   echo -e "\n${RED}$FAILED TESTS FAILED.${NC}"
   exit 1
 fi
+

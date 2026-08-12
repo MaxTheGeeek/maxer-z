@@ -25,7 +25,7 @@
     </div>
   }
 
-  <!-- Tabs Bar -->
+  <!-- Cover Letter Options Tabs Bar -->
   <div class="tabs-container">
     <button class="tab-button" [class.active]="activeOption() === 'existing'" (click)="setOption('existing')">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="tab-icon">
@@ -44,7 +44,6 @@
   <div class="compose-grid">
     <!-- OPTION 1: My Cover Letter -->
     @if (activeOption() === 'existing') {
-      <!-- Left Column: Recipient block -->
       <div class="card compose-form">
         <h2 class="card-title">Job & Recipient Information *</h2>
         <p class="field-help">Paste the recipient, company, location, and position details. Put each detail on a new line as shown in the example below.</p>
@@ -91,7 +90,6 @@
         </div>
       </div>
 
-      <!-- Right Column: Raw letter contents -->
       <div class="card compose-prompt">
         <h2 class="card-title">Existing Cover Letter Content *</h2>
         <p class="field-help">Paste your existing cover letter body text here. The LLM will correct typos, format paragraphs, and lay it out cleanly on your template.</p>
@@ -120,7 +118,6 @@
 
     <!-- OPTION 2: AI Generation -->
     @if (activeOption() === 'generate') {
-      <!-- Left Column: Form Details -->
       <div class="card compose-form">
         <h2 class="card-title">Company & Position Details</h2>
         
@@ -185,7 +182,6 @@
         </div>
       </div>
 
-      <!-- Right Column: Job Posting & Submission -->
       <div class="card compose-prompt">
         <h2 class="card-title">Job Requirements & Custom Context *</h2>
         

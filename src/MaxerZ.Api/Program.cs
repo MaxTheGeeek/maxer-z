@@ -28,12 +28,23 @@ namespace MaxerZ.Api
             builder.Services.AddControllers().AddApplicationPart(typeof(Program).Assembly);
             builder.Services.AddLogging();
 
-            // Database setup
-            var dbPath = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "MaxerZ", "maxerz.db");
-            Directory.CreateDirectory(Path.GetDirectoryName(dbPath)!);
-            builder.Services.AddDbContext<AppDbContext>(opt => opt.UseSqlite($"Data Source={dbPath}"));
+            // Database setup: Supabase PostgreSQL (Production / Cloud) or SQLite (Local fallback)
+            var postgresConnStr = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING") ??
+                                  Environment.GetEnvironmentVariable("SUPABASE_DB_URL") ??
+                                  builder.Configuration["SupabaseConnectionString"];
+
+            if (!string.IsNullOrWhiteSpace(postgresConnStr))
+            {
+                builder.Services.AddDbContext<AppDbContext>(opt => opt.UseNpgsql(postgresConnStr));
+            }
+            else
+            {
+                var dbPath = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                    "MaxerZ", "maxerz.db");
+                Directory.CreateDirectory(Path.GetDirectoryName(dbPath)!);
+                builder.Services.AddDbContext<AppDbContext>(opt => opt.UseSqlite($"Data Source={dbPath}"));
+            }
 
             // Settings (singleton — cached in memory)
             builder.Services.AddSingleton<SettingsService>();
@@ -56,6 +67,8 @@ namespace MaxerZ.Api
             builder.Services.AddScoped<PdfService>();
             builder.Services.AddScoped<TemplateService>();
             builder.Services.AddScoped<McpService>();
+            builder.Services.AddScoped<AtsService>();
+            builder.Services.AddScoped<AuthService>();
 
             // Determine correct wwwroot path for standard app vs. Mac Catalyst bundle
             var wwwrootPath = Path.Combine(builder.Environment.ContentRootPath, "wwwroot");
@@ -71,11 +84,22 @@ namespace MaxerZ.Api
 
             var app = builder.Build();
 
-            // Auto-migrate database on startup
+            // Auto-create database tables on startup
             using (var scope = app.Services.CreateScope())
             {
                 var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                db.Database.Migrate();
+                db.Database.EnsureCreated();
+                try
+                {
+                    var creator = (Microsoft.EntityFrameworkCore.Storage.IRelationalDatabaseCreator)
+                        Microsoft.EntityFrameworkCore.Infrastructure.AccessorExtensions
+                        .GetService<Microsoft.EntityFrameworkCore.Storage.IDatabaseCreator>(db.Database);
+                    creator.CreateTables();
+                }
+                catch
+                {
+                    // Ignore if tables already exist
+                }
             }
 
             app.UseCors();

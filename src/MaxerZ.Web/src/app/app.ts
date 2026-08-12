@@ -1,53 +1,85 @@
 import { Component, OnInit, signal } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { SettingsService } from './services/settings.service';
+import { AuthService } from './services/auth.service';
+import { AuthModalComponent } from './components/auth-modal/auth-modal.component';
 
 @Component({
   selector: 'app-root',
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, AuthModalComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
 export class App implements OnInit {
   isSidebarCollapsed = signal(false);
-  userName = signal('User Profile');
+  showAuthModal = signal(false);
 
   constructor(
     private settingsService: SettingsService,
-    private router: Router
+    public authService: AuthService,
+    private router: Router,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit() {
     this.loadThemeAndUser();
+
+    this.route.queryParams.subscribe((params) => {
+      if (params['requireAuth'] === 'true') {
+        this.showAuthModal.set(true);
+      }
+    });
   }
 
   loadThemeAndUser() {
     this.settingsService.getSettings().subscribe({
       next: (settings) => {
         if (settings) {
-          // Set user name in sidebar
-          if (settings.profile && settings.profile.fullName) {
-            this.userName.set(settings.profile.fullName);
-          }
-          // Set app theme
           const theme = settings.theme || 'dark';
           document.documentElement.setAttribute('data-theme', theme);
         }
       },
-      error: (err) => {
-        console.error('Failed to load settings in App initialization:', err);
-        // Default to dark theme if service fails
+      error: () => {
         document.documentElement.setAttribute('data-theme', 'dark');
       }
     });
   }
 
-  toggleSidebar() {
-    this.isSidebarCollapsed.update(val => !val);
+  getUserDisplayName(): string {
+    const user = this.authService.currentUser();
+    if (user && user.fullName) return user.fullName;
+    if (user && user.email) return user.email.split('@')[0];
+    return 'Guest User';
+  }
+
+  openAuthModal() {
+    this.showAuthModal.set(true);
+  }
+
+  closeAuthModal() {
+    this.showAuthModal.set(false);
+  }
+
+  logout() {
+    this.authService.logout();
+    this.router.navigate(['/home']);
   }
 
   navigateToSettings(tab: string) {
+    const protectedTabs = ['profile', 'mcp', 'templates'];
+    if (protectedTabs.includes(tab) && !this.authService.isLoggedIn()) {
+      this.showAuthModal.set(true);
+      return;
+    }
     this.router.navigate(['/settings'], { queryParams: { tab } });
+  }
+
+  navigateToProtected(routePath: string) {
+    if (!this.authService.isLoggedIn()) {
+      this.showAuthModal.set(true);
+      return;
+    }
+    this.router.navigate([routePath]);
   }
 }

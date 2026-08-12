@@ -489,32 +489,47 @@ namespace MaxerZ.Api.Services
 
         private string BuildResumePrompt(ResumeRequest req)
         {
+            var langsFormatted = req.Languages != null && req.Languages.Count > 0
+                ? string.Join(", ", req.Languages.Select(l => $"{l.Language} ({l.Proficiency})"))
+                : "None provided";
+
+            var templateGuidance = !string.IsNullOrWhiteSpace(req.SelectedTemplate) && req.SelectedTemplate.StartsWith("custom_")
+                ? "CUSTOM TEMPLATE LAYOUT NOTICE: The user selected a custom PDF layout template. Ensure text length, paragraph density, and bullet structure are concise, clean, and neatly formatted to overlay seamlessly without overflowing fixed custom template bounds."
+                : $"SELECTED TEMPLATE DESIGN ({req.SelectedTemplate}): Format all section text to align with modern ATS resume standards, using strong action verbs, clean bullet points (using - or •), and precise professional phrasing.";
+
             return $$"""
             You are a professional resume writer and formatter for MaxerZ app.
+
+            TARGET TEMPLATE & STYLE GUIDELINES:
+            {{templateGuidance}}
 
             STRICT RULES:
             - Optimize and format the text for each section to be highly professional, polished, and ATS-friendly.
             - Do NOT rewrite or paraphrase the facts; keep all dates, job titles, companies, and achievements accurate as provided.
             - Focus on clear formatting, action verbs, and readability.
+            - Ensure bullet points in Work Experience, Education & Certificates, Key Skills, and Projects use clear line breaks and standard bullet markers.
             - Respond ONLY with a valid JSON object. No markdown. No backticks. No explanation.
 
             Required JSON structure:
             {
               "summaryFormatted": "string — polished professional summary",
               "experienceFormatted": "string — structured professional work experiences with clean bullet points",
-              "educationFormatted": "string — structured education history",
+              "educationFormatted": "string — structured education and certificates history",
               "skillsFormatted": "string — structured skills list",
               "projectsFormatted": "string — structured projects list",
               "warnings": ["string"]
             }
 
-            Input:
-            - Language: {{req.Language}}
-            - Summary: {{req.Summary}}
-            - Experience: {{req.Experience}}
-            - Education: {{req.Education}}
-            - Skills: {{req.Skills}}
-            - Projects: {{req.Projects}}
+            Input Details:
+            - Target Language: {{req.Language}}
+            - Candidate Name: {{req.FullName}}
+            - Target Role: {{req.TargetRole}}
+            - Professional Summary: {{req.Summary}}
+            - Work Experience: {{req.Experience}}
+            - Education & Certificates: {{req.Education}}
+            - Key Skills: {{req.Skills}}
+            - Projects & Highlights: {{req.Projects}}
+            - Spoken Languages: {{langsFormatted}}
             """;
         }
 
@@ -567,6 +582,219 @@ namespace MaxerZ.Api.Services
                 AttemptLog = attemptLog,
                 Warnings = warnings,
                 WasFallback = usedProvider == "fallback"
+            };
+        }
+
+        // ==============================================================================
+        // ATS RESUME REVIEW & SCORING PIPELINE
+        // ==============================================================================
+        public async Task<AtsResult> ExecuteAtsPipelineAsync(AtsRequest request, CancellationToken ct = default)
+        {
+            var attemptLog = new List<string>();
+            var cfg = _settings.Get();
+
+            var activeProviders = cfg.ProviderPriority
+                .Select(id => _providers.FirstOrDefault(p => p.ProviderId == id))
+                .Where(p => p != null && p!.IsConfigured(cfg))
+                .Cast<ILlmProvider>()
+                .ToList();
+
+            if (activeProviders.Count == 0)
+            {
+                attemptLog.Add("no-active-providers → raw-fallback");
+                return RawAtsFallbackLayout(request, attemptLog);
+            }
+
+            var prompt = BuildAtsPrompt(request);
+
+            foreach (var prov in activeProviders)
+            {
+                ct.ThrowIfCancellationRequested();
+                var msg = $"Attempting ATS review via provider: {prov.ProviderId}";
+                _logger.LogInformation(msg);
+
+                try
+                {
+                    var (rawResult, modelUsed) = await prov.CompleteAsync(prompt, cfg, ct);
+                    if (!string.IsNullOrWhiteSpace(rawResult))
+                    {
+                        var parsed = TryParseAtsResponse(rawResult, request);
+                        if (parsed != null && parsed.OverallScore >= 0)
+                        {
+                            parsed.UsedProvider = prov.ProviderId;
+                            parsed.UsedModel = modelUsed;
+                            parsed.AttemptLog = attemptLog;
+                            parsed.WasFallback = false;
+                            attemptLog.Add($"{prov.ProviderId}/{modelUsed} → ok");
+                            return parsed;
+                        }
+                        else
+                        {
+                            var parseErr = $"{prov.ProviderId}/{modelUsed} → parse-failed";
+                            _logger.LogWarning(parseErr);
+                            attemptLog.Add(parseErr);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    var err = $"{prov.ProviderId} → unexpected: {ex.Message}";
+                    _logger.LogWarning(ex, err);
+                    attemptLog.Add(err);
+                }
+            }
+
+            _logger.LogWarning("All providers failed for ATS review. Using raw fallback.");
+            attemptLog.Add("all-providers-failed → raw-fallback");
+            return RawAtsFallbackLayout(request, attemptLog);
+        }
+
+        private string BuildAtsPrompt(AtsRequest req)
+        {
+            return $$"""
+            You are acting as two experts simultaneously:
+            1. Senior Technical Recruiter / HR Reviewer with 10+ years screening resumes for {{req.JobTitle}} roles.
+            2. Resume / Document QA Specialist evaluating structure, formatting, layout integrity, and ATS parseability.
+
+            EVALUATION INPUTS:
+            - Target Job Title: {{req.JobTitle}}
+            - Seniority Level: {{req.SeniorityLevel}}
+            - Template Archetype: {{req.TargetArchetype}}
+            - Target Job Description / Context: {{req.JobDescription ?? "Not specified (use standard industry expectations for this job title)"}}
+
+            CANDIDATE RESUME TEXT TO REVIEW:
+            {{req.ResumeText}}
+
+            STRICT SCORING & REPORTING RULES:
+            1. Score strictly on a 0–100 scale using this weighted rubric:
+               - Content relevance & impact (30% max): achievement-driven bullets, metrics, keyword match
+               - ATS parseability / technical structure (20% max): section headers, text accessibility, machine readability
+               - Layout & formatting integrity (15% max): margin/spacing consistency, alignment, section order
+               - Visual / style consistency (15% max): font count, archetype appropriateness, date/bullet consistency
+               - Grammar & language quality (15% max): zero-tolerance scaling, tense consistency, action verbs
+               - Completeness & professionalism (5% max): contact info, no unexplained gaps
+            2. Quote exact words/phrases from the candidate's resume for every strength and weakness.
+            3. Highlight ATS risks with pass/fail flags (e.g. ❌ or ✅).
+            4. Provide prioritized actionable recommendations with concrete before/after model rewrites.
+            5. Respond ONLY with a valid single JSON object. No preamble. No markdown code block backticks.
+
+            Required JSON structure:
+            {
+              "overallScore": 78,
+              "subScores": {
+                "contentRelevance": 24,
+                "atsParseability": 16,
+                "layoutFormatting": 12,
+                "visualConsistency": 11,
+                "grammarLanguage": 12,
+                "completeness": 3
+              },
+              "sectionReviews": [
+                {
+                  "sectionName": "Work Experience",
+                  "strengths": ["Quoted text strength 1"],
+                  "weaknesses": ["Quoted text weakness 1 — why it hurts"]
+                }
+              ],
+              "designLayoutReview": [
+                {
+                  "location": "Experience Section",
+                  "finding": "Description of font or alignment issue",
+                  "severity": "medium"
+                }
+              ],
+              "atsRisks": [
+                {
+                  "passed": false,
+                  "flagText": "❌ Contact info in text box might be skipped by standard ATS parsers."
+                }
+              ],
+              "recommendations": [
+                {
+                  "priority": 1,
+                  "itemToChange": "Weak passive verb in bullet under Acme Corp",
+                  "whyItMatters": "Passive language lowers impact for senior roles.",
+                  "exampleFix": "Rewrite 'Responsible for leading backend API' to 'Spearheaded microservices overhaul in C#, reducing latency by 35%.'"
+                }
+              ],
+              "revisedScorePotential": 88
+            }
+            """;
+        }
+
+        private AtsResult? TryParseAtsResponse(string raw, AtsRequest fallback)
+        {
+            if (string.IsNullOrWhiteSpace(raw)) return null;
+
+            try
+            {
+                var clean = raw
+                    .Trim()
+                    .TrimStart('`')
+                    .TrimEnd('`')
+                    .Replace("```json", "")
+                    .Replace("```", "")
+                    .Trim();
+
+                var start = clean.IndexOf('{');
+                var end = clean.LastIndexOf('}');
+                if (start < 0 || end < 0 || end <= start) return null;
+                clean = clean[start..(end + 1)];
+
+                var parsed = JsonSerializer.Deserialize<AtsResult>(clean,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                return parsed;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private AtsResult RawAtsFallbackLayout(AtsRequest req, List<string> attemptLog)
+        {
+            return new AtsResult
+            {
+                OverallScore = 70,
+                SubScores = new AtsSubScores
+                {
+                    ContentRelevance = 20,
+                    AtsParseability = 15,
+                    LayoutFormatting = 12,
+                    VisualConsistency = 10,
+                    GrammarLanguage = 10,
+                    Completeness = 3
+                },
+                SectionReviews = new List<AtsSectionReview>
+                {
+                    new AtsSectionReview
+                    {
+                        SectionName = "General Assessment",
+                        Strengths = new List<string> { "Resume text successfully ingested and parsed for target role: " + req.JobTitle },
+                        Weaknesses = new List<string> { "LLM API providers were offline or unavailable. Basic fallback scoring applied." }
+                    }
+                },
+                AtsRisks = new List<AtsRiskItem>
+                {
+                    new AtsRiskItem { Passed = true, FlagText = "✅ Standard text formatting detected." },
+                    new AtsRiskItem { Passed = false, FlagText = "⚠️ Automated LLM analysis offline — verify API keys in Settings." }
+                },
+                Recommendations = new List<AtsRecommendation>
+                {
+                    new AtsRecommendation
+                    {
+                        Priority = 1,
+                        ItemToChange = "Configure LLM API Provider",
+                        WhyItMatters = "An active LLM provider enables deep 7-stage recruiter auditing.",
+                        ExampleFix = "Go to Settings -> API Keys and enter an OpenRouter, Groq, or Ollama API key."
+                    }
+                },
+                RevisedScorePotential = 85,
+                WasFallback = true,
+                AttemptLog = attemptLog,
+                UsedProvider = "fallback",
+                UsedModel = "none"
             };
         }
     }

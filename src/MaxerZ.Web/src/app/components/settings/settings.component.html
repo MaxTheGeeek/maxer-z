@@ -24,6 +24,14 @@
       </svg>
       <span>MCP Gateway</span>
     </button>
+    @if (authService.isAdmin()) {
+      <button class="tab-link" [class.active]="activeTab() === 'supabase'" (click)="changeTab('supabase')">
+        <svg class="tab-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 5.625c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" />
+        </svg>
+        <span>Supabase & DB (Admin)</span>
+      </button>
+    }
     <button class="tab-link" [class.active]="activeTab() === 'templates'" (click)="changeTab('templates')">
       <svg class="tab-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
@@ -256,6 +264,82 @@
       </div>
     }
 
+    <!-- Tab: Supabase & DB settings (Admin Only) -->
+    @if (activeTab() === 'supabase') {
+      @if (authService.isAdmin()) {
+        <div class="tab-panel">
+          <h2 class="panel-title">Supabase Cloud Database Configuration (Admin Only)</h2>
+          <p class="panel-subtitle">Configure your Supabase Project ID and PostgreSQL connection string for cloud data persistence.</p>
+
+          <fieldset class="provider-fieldset">
+            <legend>Supabase Project Info</legend>
+            <div class="form-row">
+              <div class="form-group flex-1">
+                <label for="sb-proj-id">Supabase Project ID</label>
+                <input type="text" id="sb-proj-id" [(ngModel)]="settings().supabaseProjectId" placeholder="e.g. abcdefghijklmnopqrst" />
+                <p class="field-help">Found in your Supabase Dashboard -> Project Settings -> General.</p>
+              </div>
+              <div class="form-group flex-1">
+                <label for="sb-url">Supabase Project URL</label>
+                <input type="text" id="sb-url" [(ngModel)]="settings().supabaseUrl" placeholder="https://your-project-id.supabase.co" />
+                <p class="field-help">Auto-derived or copied from Supabase API settings.</p>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="sb-anon-key">Supabase Anon / Public Key</label>
+              <input type="password" id="sb-anon-key" [(ngModel)]="settings().supabaseAnonKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." />
+              <p class="field-help">Public API key used for client-side Supabase services.</p>
+            </div>
+          </fieldset>
+
+          <fieldset class="provider-fieldset">
+            <legend>Google OAuth 2.0 Provider Credentials</legend>
+            <div class="form-row">
+              <div class="form-group flex-1">
+                <label for="g-client-id">Google Client ID</label>
+                <input type="text" id="g-client-id" [(ngModel)]="settings().googleClientId" placeholder="123456789-xxx.apps.googleusercontent.com" />
+                <p class="field-help">From Google Cloud Console -> Credentials -> OAuth 2.0 Client IDs.</p>
+              </div>
+              <div class="form-group flex-1">
+                <label for="g-client-secret">Google Client Secret</label>
+                <input type="password" id="g-client-secret" [(ngModel)]="settings().googleClientSecret" placeholder="GOCSPX-..." />
+                <p class="field-help">Secret key from your Google Cloud Console OAuth Client.</p>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 10px;">
+              <label>Supabase OAuth Callback URL for Google Cloud Console</label>
+              <div style="display: flex; gap: 10px; align-items: center;">
+                <input type="text" readonly [value]="getSupabaseCallbackUrl()" style="flex: 1; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); color: #60a5fa; font-family: monospace; font-size: 13px;" />
+                <button type="button" class="btn-secondary" style="margin: 0; white-space: nowrap;" (click)="copyCallbackUrl()">
+                  Copy Callback URL
+                </button>
+              </div>
+              <p class="field-help" style="margin-top: 6px;">Paste this exact URL into <strong>Google Cloud Console -> Credentials -> Authorized Redirect URIs</strong>.</p>
+            </div>
+          </fieldset>
+
+          <fieldset class="provider-fieldset">
+            <legend>Supabase PostgreSQL Connection String</legend>
+            <div class="form-group">
+              <label for="sb-conn">PostgreSQL Connection String</label>
+              <textarea id="sb-conn" [(ngModel)]="settings().supabaseConnectionString" rows="3" placeholder="Host=aws-0-eu-central-1.pooler.supabase.com;Port=5432;Database=postgres;Username=postgres.your_project_id;Password=your_supabase_password" style="width:100%; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:10px; color:#fff; font-family:monospace; font-size:12px;"></textarea>
+              <p class="field-help">Direct connection string to your Supabase PostgreSQL pooler or database.</p>
+            </div>
+          </fieldset>
+        </div>
+      } @else {
+        <div class="tab-panel" style="text-align: center; padding: 40px 20px;">
+          <div style="font-size: 48px; margin-bottom: 15px;">🔒</div>
+          <h2 style="color: #ef4444; font-size: 20px; font-weight: 800; margin-bottom: 8px;">Access Forbidden</h2>
+          <p style="color: var(--text-muted); font-size: 14px; max-width: 480px; margin: 0 auto;">
+            Configuring Supabase database credentials and OAuth secrets requires an <strong>Admin</strong> role. Please sign in as an Administrator to access database settings.
+          </p>
+        </div>
+      }
+    }
+
     <!-- Tab 4: App settings -->
     @if (activeTab() === 'app') {
       <div class="tab-panel">
@@ -312,40 +396,42 @@
     <!-- Tab 5: Templates Settings -->
     @if (activeTab() === 'templates') {
       <div class="tab-panel">
-        <h2 class="panel-title">Custom Cover Letter Templates</h2>
-        <p class="panel-subtitle">Upload your own PDF templates. The AI layout engine will overlay text directly on your custom designs.</p>
+        <h2 class="panel-title">PDF Document Templates</h2>
+        <p class="panel-subtitle">Manage distinct layout templates for Cover Letters and Resumes. Upload custom designs for the AI layout engine.</p>
 
-        <!-- Template Uploader -->
-        <div class="upload-zone card">
-          <div class="upload-content">
-            <svg class="upload-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v12m0 0l-3-3m3 3l3-3m-9-6a9 9 0 1118 0c0 1.63-.4 3.16-1.12 4.5" />
-            </svg>
-            <div class="upload-text">
-              <h3>Upload PDF Layout Template</h3>
-              <p>Click to select a PDF design from your computer</p>
+        <!-- SECTION 1: Cover Letter Templates -->
+        <div style="margin-bottom: 40px; padding-bottom: 30px; border-bottom: 1px solid rgba(255,255,255,0.08);">
+          <h3 style="font-size: 1.15rem; font-weight: 600; margin-bottom: 12px; color: var(--accent-color, #006CA5);">
+            Cover Letter Templates
+          </h3>
+          
+          <div class="upload-zone card" style="margin-bottom: 20px;">
+            <div class="upload-content">
+              <svg class="upload-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v12m0 0l-3-3m3 3l3-3m-9-6a9 9 0 1118 0c0 1.63-.4 3.16-1.12 4.5" />
+              </svg>
+              <div class="upload-text">
+                <h3>Upload Cover Letter PDF Template</h3>
+                <p>Click to select a PDF cover letter design from your computer</p>
+              </div>
+              <input type="file" (change)="onTemplateFileSelected($event, 'cover_letter')" accept="application/pdf" class="file-input" id="cover-template-upload" />
             </div>
-            <input type="file" (change)="onTemplateFileSelected($event)" accept="application/pdf" class="file-input" id="template-file-upload" />
+
+            @if (coverUploadProgress()) {
+              <div class="upload-status success-message" style="margin-top: 15px; display: flex; align-items: center; gap: 8px; justify-content: center;">
+                <div class="spinner inline-spinner"></div>
+                <span>{{ coverUploadProgress() }}</span>
+              </div>
+            }
+            @if (coverUploadError()) {
+              <div class="upload-status error-message" style="margin-top: 15px; color: var(--error-color, #ef4444); text-align: center;">
+                <span>{{ coverUploadError() }}</span>
+              </div>
+            }
           </div>
 
-          @if (uploadProgress()) {
-            <div class="upload-status success-message" style="margin-top: 15px; display: flex; align-items: center; gap: 8px; justify-content: center;">
-              <div class="spinner inline-spinner"></div>
-              <span>{{ uploadProgress() }}</span>
-            </div>
-          }
-          @if (uploadError()) {
-            <div class="upload-status error-message" style="margin-top: 15px; color: var(--error-color, #ef4444); text-align: center;">
-              <span>{{ uploadError() }}</span>
-            </div>
-          }
-        </div>
-
-        <!-- Templates List -->
-        <div class="templates-section" style="margin-top: 30px;">
-          <h3 class="section-title" style="font-size: 1.1rem; font-weight: 600; margin-bottom: 15px;">Available Templates</h3>
           <div class="templates-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">
-            @for (temp of templatesList(); track temp.id) {
+            @for (temp of coverLetterTemplatesList(); track temp.id) {
               <div class="template-card card" style="display: flex; align-items: center; justify-content: space-between; padding: 15px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; position: relative; overflow: hidden;">
                 <div class="template-info" style="display: flex; align-items: center; gap: 12px;">
                   <div class="template-icon" style="color: var(--accent-color, #006CA5); width: 24px; height: 24px;">
@@ -356,7 +442,67 @@
                   <div class="template-details" style="display: flex; flex-direction: column; gap: 4px;">
                     <span class="template-name" style="font-weight: 500; font-size: 0.95rem; color: var(--text-color, #f3f4f6); word-break: break-all;">{{ temp.name }}</span>
                     <span class="template-badge" [class.badge-system]="!temp.isCustom" [class.badge-custom]="temp.isCustom" style="font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; width: fit-content; font-weight: 600;" [style.background]="temp.isCustom ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255, 255, 255, 0.05)'" [style.color]="temp.isCustom ? '#10b981' : '#9ca3af'">
-                      {{ temp.isCustom ? 'Custom Upload' : 'System Default' }}
+                      {{ temp.isCustom ? 'Custom Cover Letter' : 'System Default' }}
+                    </span>
+                  </div>
+                </div>
+                
+                @if (temp.isCustom) {
+                  <button class="delete-btn" (click)="deleteTemplate(temp.id)" title="Delete Template" style="background: transparent; border: none; color: #ef4444; cursor: pointer; padding: 6px; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: background 0.2s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.1)'" onmouseout="this.style.background='transparent'">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 18px; height: 18px;">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.34 9m-4.78 0L9 9m9.96-3-3.2 13.682A1.5 1.5 0 0 1 14.382 21H9.618a1.5 1.5 0 0 1-1.478-1.318L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                    </svg>
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- SECTION 2: Resume Templates -->
+        <div>
+          <h3 style="font-size: 1.15rem; font-weight: 600; margin-bottom: 12px; color: #10b981;">
+            Resume Templates
+          </h3>
+          
+          <div class="upload-zone card" style="margin-bottom: 20px;">
+            <div class="upload-content">
+              <svg class="upload-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v12m0 0l-3-3m3 3l3-3m-9-6a9 9 0 1118 0c0 1.63-.4 3.16-1.12 4.5" />
+              </svg>
+              <div class="upload-text">
+                <h3>Upload Resume PDF Template</h3>
+                <p>Click to select a PDF resume/CV design from your computer</p>
+              </div>
+              <input type="file" (change)="onTemplateFileSelected($event, 'resume')" accept="application/pdf" class="file-input" id="resume-template-upload" />
+            </div>
+
+            @if (resumeUploadProgress()) {
+              <div class="upload-status success-message" style="margin-top: 15px; display: flex; align-items: center; gap: 8px; justify-content: center;">
+                <div class="spinner inline-spinner"></div>
+                <span>{{ resumeUploadProgress() }}</span>
+              </div>
+            }
+            @if (resumeUploadError()) {
+              <div class="upload-status error-message" style="margin-top: 15px; color: var(--error-color, #ef4444); text-align: center;">
+                <span>{{ resumeUploadError() }}</span>
+              </div>
+            }
+          </div>
+
+          <div class="templates-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">
+            @for (temp of resumeTemplatesList(); track temp.id) {
+              <div class="template-card card" style="display: flex; align-items: center; justify-content: space-between; padding: 15px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; position: relative; overflow: hidden;">
+                <div class="template-info" style="display: flex; align-items: center; gap: 12px;">
+                  <div class="template-icon" style="color: #10b981; width: 24px; height: 24px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                    </svg>
+                  </div>
+                  <div class="template-details" style="display: flex; flex-direction: column; gap: 4px;">
+                    <span class="template-name" style="font-weight: 500; font-size: 0.95rem; color: var(--text-color, #f3f4f6); word-break: break-all;">{{ temp.name }}</span>
+                    <span class="template-badge" [class.badge-system]="!temp.isCustom" [class.badge-custom]="temp.isCustom" style="font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; width: fit-content; font-weight: 600;" [style.background]="temp.isCustom ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255, 255, 255, 0.05)'" [style.color]="temp.isCustom ? '#10b981' : '#9ca3af'">
+                      {{ temp.isCustom ? 'Custom Resume' : 'System Default' }}
                     </span>
                   </div>
                 </div>

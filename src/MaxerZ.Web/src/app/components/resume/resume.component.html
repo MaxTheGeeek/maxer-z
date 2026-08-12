@@ -1,0 +1,201 @@
+<div class="compose-container">
+  <header class="compose-header">
+    <h1 class="page-title">Build Resume / CV</h1>
+    <p class="page-desc">Enter your career history, skills, and target role to generate an ATS-optimized, multi-page PDF Resume.</p>
+  </header>
+
+  <!-- Providers active status or warning -->
+  @if (noProvidersWarning()) {
+    <div class="warning-banner">
+      <svg class="warn-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
+      <div>
+        <strong>No Active LLM Providers:</strong> You have not configured credentials for any provider. The system will fall back to local Raw templates. Please update your <a routerLink="/settings" class="inline-link">API Keys</a>.
+      </div>
+    </div>
+  } @else {
+    <div class="info-banner">
+      <svg class="info-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <div>
+        Active cascading pipeline: <strong>{{ activeProviders().join(' → ') }}</strong>
+      </div>
+    </div>
+  }
+
+  <!-- RESUME / CV BUILDER VIEW -->
+  <div class="compose-grid">
+    <!-- Left Column: Header Info, Setup & Summary -->
+    <div class="card compose-form">
+      <h2 class="card-title">Resume Header & Target Role *</h2>
+      <p class="field-help">Your name, title, and selected address are rendered in the header on page 1.</p>
+
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label for="resume-name">Full Name *</label>
+          <input type="text" id="resume-name" [(ngModel)]="fullName" placeholder="e.g. Alex Vance" />
+        </div>
+        <div class="form-group flex-1">
+          <label for="resume-role">Target Role / Job Title *</label>
+          <input type="text" id="resume-role" [(ngModel)]="targetRole" placeholder="e.g. Senior Full-Stack Engineer" />
+        </div>
+      </div>
+
+      <div class="form-row" style="margin-top: 15px;">
+        <div class="form-group flex-1">
+          <label for="resume-lang">Language *</label>
+          <select id="resume-lang" [ngModel]="resumeLanguage()" (ngModelChange)="resumeLanguage.set($event)">
+            <option value="en">English (US/UK)</option>
+            <option value="de">Deutsch (German)</option>
+          </select>
+        </div>
+        <div class="form-group flex-1">
+          <label for="resume-temp">PDF Template *</label>
+          <select id="resume-temp" [ngModel]="resumeSelectedTemplate()" (ngModelChange)="resumeSelectedTemplate.set($event)">
+            @for (temp of templates(); track temp.id) {
+              <option [value]="temp.id">{{ temp.name }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-top: 15px;">
+        <label for="resume-header-address">Select Header Address (From Settings)</label>
+        @if (addresses().length > 0) {
+          <select id="resume-header-address" [ngModel]="headerAddress()" (ngModelChange)="headerAddress.set($event)">
+            @for (addr of addresses(); track addr) {
+              <option [value]="addr">{{ addr }}</option>
+            }
+          </select>
+        } @else {
+          <input type="text" id="resume-header-address" [ngModel]="headerAddress()" (ngModelChange)="headerAddress.set($event)" placeholder="Musterstraße 1, 1010 Wien" />
+        }
+      </div>
+
+      <div class="form-group" style="margin-top: 15px;">
+        <label for="resume-summary">Professional Summary / About Me</label>
+        <textarea id="resume-summary" [(ngModel)]="resumeSummary" 
+                  placeholder="e.g. Senior Software Engineer with 8+ years experience leading full-stack web applications..." 
+                  class="prompt-textarea" style="min-height: 110px;"></textarea>
+      </div>
+
+      <div class="form-group" style="margin-top: 15px;">
+        <label for="resume-skills">Key Skills & Competencies</label>
+        <textarea id="resume-skills" [(ngModel)]="resumeSkills" 
+                  placeholder="e.g. C#, .NET 10, Angular, TypeScript, PostgreSQL, Docker, Azure, CI/CD" 
+                  class="prompt-textarea" style="min-height: 110px;"></textarea>
+      </div>
+
+      <!-- Spoken Languages & Proficiency Section -->
+      <div class="languages-section" style="margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+          <label style="font-weight: 600; font-size: 0.95rem; color: var(--text-color, #f3f4f6);">Languages Spoken & Proficiency</label>
+          <button type="button" class="btn-secondary" (click)="addLanguage()" style="padding: 4px 10px; font-size: 0.82rem;">+ Add Language</button>
+        </div>
+
+        @for (lang of languages(); track $index) {
+          <div class="language-row" style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
+            <input type="text" [(ngModel)]="lang.language" placeholder="e.g. English, German, Spanish" style="flex: 1;" />
+            <select [(ngModel)]="lang.proficiency" style="width: 210px;">
+              @for (opt of proficiencyOptions; track opt) {
+                <option [value]="opt">{{ opt }}</option>
+              }
+            </select>
+            <button type="button" (click)="removeLanguage($index)" title="Remove Language" style="background: transparent; border: none; color: #ef4444; cursor: pointer; padding: 4px 8px; font-size: 1.1rem; border-radius: 4px;">×</button>
+          </div>
+        }
+      </div>
+
+      <div class="form-actions" style="margin-top: 20px;">
+        <button class="btn-secondary" (click)="clearResumeForm()" [disabled]="isGenerating()">Clear Resume Draft</button>
+      </div>
+    </div>
+
+    <!-- Right Column: Experience, Education, Projects, Section Ordering & Action -->
+    <div class="card compose-prompt">
+      <h2 class="card-title">Experience, Education & Projects</h2>
+      
+      <div class="form-group">
+        <label for="resume-exp">Work Experience</label>
+        <textarea id="resume-exp" [(ngModel)]="resumeExperience" 
+                  placeholder="e.g. Senior Developer at Acme Corp (2021 - Present)&#10;- Led migration of core services to .NET 10 microservices&#10;- Mentored junior engineers and optimized CI/CD pipelines" 
+                  class="prompt-textarea" style="min-height: 130px;"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="resume-edu">Education & Certificates</label>
+        <textarea id="resume-edu" [(ngModel)]="resumeEducation" 
+                  placeholder="e.g. B.Sc. Computer Science - TU Wien (2016 - 2020) | AWS Certified Solutions Architect" 
+                  class="prompt-textarea" style="min-height: 90px;"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="resume-projects">Projects & Key Accomplishments</label>
+        <textarea id="resume-projects" [(ngModel)]="resumeProjects" 
+                  placeholder="e.g. MaxerZ Desktop App: Cross-platform .NET MAUI desktop app with embedded ASP.NET Core API and LLM fallback chain." 
+                  class="prompt-textarea" style="min-height: 90px;"></textarea>
+      </div>
+
+      <!-- Reorderable Resume Sections Control -->
+      <div class="section-order-card" style="margin-top: 15px; padding: 15px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px;">
+        <h3 style="font-size: 0.95rem; font-weight: 600; margin-bottom: 8px; color: var(--text-color, #f3f4f6);">Customize PDF Section Order</h3>
+        <p style="font-size: 0.8rem; color: #9ca3af; margin-bottom: 12px;">Use the Up/Down buttons to reorder how sections appear on the generated resume PDF.</p>
+
+        <div class="section-order-list" style="display: flex; flex-direction: column; gap: 6px;">
+          @for (secKey of sectionOrder(); track secKey; let idx = $index) {
+            <div class="order-item" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: rgba(255,255,255,0.04); border-radius: 6px; border: 1px solid rgba(255,255,255,0.06);">
+              <span style="font-size: 0.88rem; font-weight: 500;">{{ idx + 1 }}. {{ sectionLabels[secKey] || secKey }}</span>
+              <div style="display: flex; gap: 4px;">
+                <button type="button" (click)="moveSection(idx, 'up')" [disabled]="idx === 0" style="background: rgba(255,255,255,0.08); border: none; color: #fff; border-radius: 4px; padding: 2px 8px; cursor: pointer;">▲</button>
+                <button type="button" (click)="moveSection(idx, 'down')" [disabled]="idx === sectionOrder().length - 1" style="background: rgba(255,255,255,0.08); border: none; color: #fff; border-radius: 4px; padding: 2px 8px; cursor: pointer;">▼</button>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      @if (formError()) {
+        <div class="error-alert">
+          {{ formError() }}
+        </div>
+      }
+
+      <button class="btn-primary generate-btn" (click)="generateResume()" 
+              [disabled]="isGenerating() || !fullName().trim() || !targetRole().trim() || (!resumeSummary().trim() && !resumeExperience().trim() && !resumeSkills().trim())">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="btn-icon">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 21l8.982-11.795H12.91L13.75 3 5 14.805H9.81Z" />
+        </svg>
+        <span>Generate Resume PDF</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Detailed Loading Console Overlay -->
+  @if (isGenerating()) {
+    <div class="console-overlay">
+      <div class="console-box card">
+        <div class="console-header">
+          <div class="console-dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+          </div>
+          <span class="console-title">MaxerZ AI Cascading Engine Logs</span>
+        </div>
+        <div class="console-body">
+          @for (log of progressLogs(); track log) {
+            <div class="console-line" [class.error-line]="log.startsWith('✗')" [class.success-line]="log.startsWith('✓')">
+              <span class="console-prompt">></span> {{ log }}
+            </div>
+          }
+          <div class="console-spinner-row">
+            <div class="spinner"></div>
+            <span>Generating structured resume layout... Please do not close the window.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

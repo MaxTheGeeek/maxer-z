@@ -1,102 +1,195 @@
 @import '../styles/variables';
 
-.app-container {
+.app-shell {
   display: flex;
+  flex-direction: column;
   width: 100vw;
   height: 100vh;
   overflow: hidden;
   background-color: var(--bg-primary);
-
-  &.sidebar-collapsed {
-    .sidebar {
-      width: var(--sidebar-collapsed);
-    }
-    .brand-logo-container {
-      opacity: 0;
-      visibility: hidden;
-      transform: translateX(-10px);
-    }
-    .menu-text {
-      opacity: 0;
-      visibility: hidden;
-      transform: translateX(-10px);
-    }
-    .user-details {
-      opacity: 0;
-      visibility: hidden;
-      transform: translateX(-10px);
-    }
-    .sidebar-footer {
-      padding: 12px 6px;
-      justify-content: center;
-    }
-  }
 }
 
-.sidebar {
-  width: var(--sidebar-width);
+/* Modern Top Header Navigation Bar (Stitch Web UX Design) */
+.app-navbar {
+  height: 64px;
   background-color: var(--bg-secondary);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  transition: width var(--transition);
-  position: relative;
-  z-index: 10;
-  flex-shrink: 0;
-}
-
-.sidebar-header {
-  height: 60px;
+  border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
-  padding: 0 16px;
-  border-bottom: 1px solid var(--border);
-  gap: 12px;
-  overflow: hidden;
+  justify-content: space-between;
+  padding: 0 24px;
+  z-index: 100;
+  flex-shrink: 0;
 
-  .toggle-btn {
-    background: none;
-    border: none;
-    padding: 6px;
-    border-radius: var(--radius);
-    color: var(--text-secondary);
-    cursor: pointer;
+  .navbar-left {
     display: flex;
     align-items: center;
-    justify-content: center;
-    transition: all var(--transition);
 
-    &:hover {
-      background-color: var(--bg-elevated);
-      color: var(--text-primary);
-    }
+    .brand-logo-link {
+      display: flex;
+      align-items: center;
+      text-decoration: none;
 
-    .icon {
-      width: 20px;
-      height: 20px;
+      .brand-logo {
+        height: 36px;
+        max-width: 140px;
+        object-fit: contain;
+
+        &.light-logo-only {
+          display: none;
+        }
+      }
     }
   }
 
-  .brand-logo-container {
+  .navbar-links {
     display: flex;
     align-items: center;
-    transition: opacity var(--transition), visibility var(--transition), transform var(--transition);
-    
-    .brand-logo {
-      height: 36px;
-      max-width: 135px;
-      object-fit: contain;
+    gap: 8px;
 
-      &.light-logo-only {
-        display: none;
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 13.5px;
+      font-weight: 500;
+      transition: all var(--transition);
+
+      .nav-icon {
+        width: 18px;
+        height: 18px;
+        color: var(--text-muted);
+        transition: color var(--transition);
+      }
+
+      &:hover {
+        background-color: var(--bg-elevated);
+        color: var(--text-primary);
+
+        .nav-icon {
+          color: var(--accent);
+        }
+      }
+
+      &.active {
+        background-color: var(--accent-dim);
+        color: var(--text-primary);
+        font-weight: 600;
+        border-bottom: 2px solid var(--accent);
+
+        .nav-icon {
+          color: var(--accent);
+        }
+      }
+    }
+  }
+
+  .navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    .settings-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 7px 12px;
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all var(--transition);
+
+      .nav-icon {
+        width: 16px;
+        height: 16px;
+      }
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--text-primary);
+      }
+    }
+
+    .auth-btn {
+      background: var(--accent);
+      color: #0c0e14;
+      border: none;
+      border-radius: 8px;
+      padding: 7px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all var(--transition);
+
+      .nav-icon {
+        width: 16px;
+        height: 16px;
+        color: #0c0e14;
+      }
+
+      &:hover {
+        background: #38bdf8;
+      }
+    }
+
+    .user-profile-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+
+      .avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background-color: var(--accent);
+        color: #0c0e14;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 13px;
+      }
+
+      .user-name-text {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-primary);
+
+        @media (max-width: 768px) {
+          display: none;
+        }
+      }
+
+      .logout-btn {
+        background: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        border-radius: 6px;
+        padding: 4px 8px;
+        font-size: 11px;
+        font-weight: 600;
+        cursor: pointer;
+        &:hover {
+          background: rgba(239, 68, 68, 0.3);
+        }
       }
     }
   }
 }
 
 :root[data-theme="light"] {
-  .brand-logo-container .brand-logo {
+  .app-navbar .navbar-left .brand-logo {
     &.dark-logo-only {
       display: none;
     }
@@ -106,128 +199,9 @@
   }
 }
 
-.sidebar-menu {
-  flex: 1;
-  padding: 16px 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  overflow-y: auto;
-  overflow-x: hidden;
-
-  /* Style buttons inside sidebar to act like menu items */
-  button.menu-item {
-    background: none;
-    border: none;
-    width: 100%;
-    text-align: left;
-    justify-content: flex-start;
-  }
-
-  .menu-item {
-    display: flex;
-    align-items: center;
-    padding: 10px 12px;
-    border-radius: var(--radius);
-    color: var(--text-secondary);
-    text-decoration: none;
-    gap: 12px;
-    cursor: pointer;
-    transition: all var(--transition);
-    white-space: nowrap;
-
-    &:hover {
-      background-color: var(--bg-elevated);
-      color: var(--text-primary);
-      
-      .icon {
-        color: var(--accent);
-        transform: scale(1.05);
-      }
-    }
-
-    &.active {
-      background-color: var(--accent-dim);
-      color: var(--text-primary);
-      font-weight: 500;
-      border-left: 3px solid var(--accent);
-      border-top-left-radius: 0;
-      border-bottom-left-radius: 0;
-      padding-left: 9px;
-
-      .icon {
-        color: var(--accent);
-      }
-    }
-
-    .icon {
-      width: 18px;
-      height: 18px;
-      transition: all var(--transition);
-      color: var(--text-muted);
-      flex-shrink: 0;
-    }
-
-    .menu-text {
-      font-size: 13px;
-      transition: opacity var(--transition), visibility var(--transition), transform var(--transition);
-    }
-  }
-
-  .menu-divider {
-    height: 1px;
-    background-color: var(--border);
-    margin: 12px 8px;
-  }
-}
-
-.sidebar-footer {
-  padding: 12px 16px;
-  border-top: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  overflow: hidden;
-  transition: padding var(--transition);
-
-  .avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background-color: var(--accent);
-    color: #0c0e14;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 14px;
-    flex-shrink: 0;
-    box-shadow: 0 0 8px rgba(91, 192, 248, 0.3);
-  }
-
-  .user-details {
-    display: flex;
-    flex-direction: column;
-    transition: opacity var(--transition), visibility var(--transition), transform var(--transition);
-    white-space: nowrap;
-
-    .user-name {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-primary);
-    }
-
-    .user-status {
-      font-size: 11px;
-      color: var(--accent-green);
-      font-weight: 500;
-    }
-  }
-}
-
 .main-content {
   flex: 1;
-  height: 100%;
+  height: calc(100vh - 64px);
   overflow-y: auto;
   background-color: var(--bg-primary);
   position: relative;

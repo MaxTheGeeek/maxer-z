@@ -196,13 +196,28 @@ namespace MaxerZ.Api.Controllers
         }
 
         [HttpGet("templates")]
-        public IActionResult GetTemplates()
+        public IActionResult GetTemplates([FromQuery] string? type)
         {
-            var list = new List<object>
+            var normalizedType = (type ?? "").ToLower().Trim();
+            var list = new List<object>();
+
+            if (normalizedType == "resume")
             {
-                new { id = "template_1", name = "Template 1 (Professional Classic)", isCustom = false },
-                new { id = "template_2", name = "Template 2 (Modern Minimalist)", isCustom = false }
-            };
+                list.Add(new { id = "resume_template_1", name = "Template 1 (Executive Resume)", type = "resume", isCustom = false });
+                list.Add(new { id = "resume_template_2", name = "Template 2 (Modern Clean Resume)", type = "resume", isCustom = false });
+            }
+            else if (normalizedType == "cover_letter" || string.IsNullOrEmpty(normalizedType))
+            {
+                list.Add(new { id = "template_1", name = "Template 1 (Professional Classic Cover Letter)", type = "cover_letter", isCustom = false });
+                list.Add(new { id = "template_2", name = "Template 2 (Modern Minimalist Cover Letter)", type = "cover_letter", isCustom = false });
+            }
+            else // "all"
+            {
+                list.Add(new { id = "template_1", name = "Template 1 (Professional Classic Cover Letter)", type = "cover_letter", isCustom = false });
+                list.Add(new { id = "template_2", name = "Template 2 (Modern Minimalist Cover Letter)", type = "cover_letter", isCustom = false });
+                list.Add(new { id = "resume_template_1", name = "Template 1 (Executive Resume)", type = "resume", isCustom = false });
+                list.Add(new { id = "resume_template_2", name = "Template 2 (Modern Clean Resume)", type = "resume", isCustom = false });
+            }
 
             var dir = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
@@ -214,12 +229,22 @@ namespace MaxerZ.Api.Controllers
                 foreach (var file in files)
                 {
                     var filename = Path.GetFileName(file);
-                    list.Add(new
+                    var fileType = filename.StartsWith("resume_", StringComparison.OrdinalIgnoreCase) ? "resume" : "cover_letter";
+                    
+                    if (string.IsNullOrEmpty(normalizedType) || normalizedType == "all" || normalizedType == fileType)
                     {
-                        id = filename,
-                        name = Path.GetFileNameWithoutExtension(filename),
-                        isCustom = true
-                    });
+                        var cleanName = Path.GetFileNameWithoutExtension(filename);
+                        if (cleanName.StartsWith("resume_", StringComparison.OrdinalIgnoreCase)) cleanName = cleanName.Substring(7);
+                        if (cleanName.StartsWith("cover_letter_", StringComparison.OrdinalIgnoreCase)) cleanName = cleanName.Substring(13);
+
+                        list.Add(new
+                        {
+                            id = filename,
+                            name = cleanName,
+                            type = fileType,
+                            isCustom = true
+                        });
+                    }
                 }
             }
 
@@ -227,7 +252,7 @@ namespace MaxerZ.Api.Controllers
         }
 
         [HttpPost("templates/upload")]
-        public async Task<IActionResult> UploadTemplate([FromForm] Microsoft.AspNetCore.Http.IFormFile file)
+        public async Task<IActionResult> UploadTemplate([FromForm] Microsoft.AspNetCore.Http.IFormFile file, [FromQuery] string? type)
         {
             if (file == null || file.Length == 0)
                 return BadRequest("No file uploaded.");
@@ -241,19 +266,27 @@ namespace MaxerZ.Api.Controllers
 
             Directory.CreateDirectory(dir);
 
-            var filePath = Path.Combine(dir, file.FileName);
+            var targetType = (type ?? "").ToLower().Trim() == "resume" ? "resume" : "cover_letter";
+            var prefix = targetType == "resume" ? "resume_" : "cover_letter_";
+            var safeFilename = file.FileName;
+            if (!safeFilename.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                safeFilename = prefix + safeFilename;
+            }
+
+            var filePath = Path.Combine(dir, safeFilename);
             using (var stream = new FileStream(filePath, FileMode.Create))
             {
                 await file.CopyToAsync(stream);
             }
 
-            return Ok(new { success = true });
+            return Ok(new { success = true, filename = safeFilename, type = targetType });
         }
 
         [HttpDelete("templates/{id}")]
         public IActionResult DeleteTemplate(string id)
         {
-            if (string.IsNullOrWhiteSpace(id) || id == "template_1" || id == "template_2")
+            if (string.IsNullOrWhiteSpace(id) || id == "template_1" || id == "template_2" || id == "resume_template_1" || id == "resume_template_2")
                 return BadRequest("Invalid template ID.");
 
             var dir = Path.Combine(

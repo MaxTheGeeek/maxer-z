@@ -13,7 +13,7 @@ import { CoverLetterRequest } from '../../models/models';
   styleUrl: './compose.component.scss'
 })
 export class ComposeComponent implements OnInit {
-  // Tabs selection: 'existing' (My Cover Letter) | 'generate' (AI Generation)
+  // Tabs selection for Cover Letter: 'existing' (My Cover Letter) | 'generate' (AI Generation)
   activeOption = signal('existing');
   
   // Option 1: My Cover Letter fields
@@ -61,7 +61,7 @@ export class ComposeComponent implements OnInit {
   }
 
   loadTemplates() {
-    this.settingsService.getTemplates().subscribe({
+    this.settingsService.getTemplates('cover_letter').subscribe({
       next: (data) => {
         this.templates.set(data);
       },
@@ -82,18 +82,17 @@ export class ComposeComponent implements OnInit {
         const list = s.profile.addresses || (s.profile.address ? [s.profile.address] : []);
         this.addresses.set(list);
         
-        // If no draft is loaded, default the active address to the first configured address
+        const defaultAddr = list.length > 0 ? list[0] : 'Musterstraße 1, 1010 Wien';
+        
+        // If no draft is loaded, default active addresses
         const draft = this.coverLetterService.getComposeState();
         if (!draft) {
-          if (list.length > 0) {
-            this.headerAddress.set(list[0]);
-          } else {
-            this.headerAddress.set('Musterstraße 1, 1010 Wien');
-          }
+          this.headerAddress.set(defaultAddr);
         }
       }
     });
 
+    // Load Cover Letter draft
     const draft = this.coverLetterService.getComposeState();
     if (draft) {
       this.activeOption.set(draft.mode || 'existing');
@@ -158,7 +157,6 @@ export class ComposeComponent implements OnInit {
     let request: CoverLetterRequest;
 
     if (this.activeOption() === 'existing') {
-      // Validate Option 1: My Cover Letter
       if (!this.rawRecipientInfo().trim()) {
         this.formError.set('Please provide the Job & Recipient Information block.');
         return;
@@ -171,16 +169,15 @@ export class ComposeComponent implements OnInit {
       request = {
         mode: 'existing',
         rawRecipientInfo: this.rawRecipientInfo().trim(),
-        companyName: '', // Extracted by backend LLM
-        position: '',    // Extracted by backend LLM
-        companyLocation: '', // Extracted by backend LLM
+        companyName: '',
+        position: '',
+        companyLocation: '',
         language: this.language(),
         selectedTemplate: this.selectedTemplate(),
         headerAddress: this.headerAddress().trim(),
         coverLetterBody: this.existingCoverLetterBody().trim()
       };
     } else {
-      // Validate Option 2: AI Generation
       if (!this.companyName().trim() || !this.position().trim() || !this.companyLocation().trim()) {
         this.formError.set('Please fill out all required fields marked with *');
         return;
@@ -205,7 +202,6 @@ export class ComposeComponent implements OnInit {
       };
     }
 
-    // Save current compose state as a draft
     this.coverLetterService.setComposeState(request);
 
     this.isGenerating.set(true);

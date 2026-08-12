@@ -46,6 +46,17 @@ namespace MaxerZ.Api.Models
         // === App ===
         public string Theme { get; set; } = "dark";
         public string ExportDirectory { get; set; } = "~/Documents/MaxerZ";
+
+        // === Supabase Cloud Database & Auth ===
+        public string SupabaseProjectId { get; set; } = "skmfankwrdbevfcooyqf";
+        public string SupabaseUrl { get; set; } = "https://skmfankwrdbevfcooyqf.supabase.co";
+        public string SupabaseAnonKey { get; set; } = "";
+        public string SupabaseConnectionString { get; set; } = "";
+
+        // === Google OAuth Credentials ===
+        public string GoogleClientId { get; set; } = "";
+        public string GoogleClientSecret { get; set; } = "";
+
         public UserProfile Profile { get; set; } = new();
     }
 
@@ -53,7 +64,7 @@ namespace MaxerZ.Api.Models
     {
         private string _address = "Musterstraße 1, 1010 Wien";
 
-        public string FullName { get; set; } = "Max Mustermann";
+        public string FullName { get; set; } = "Alex Vance";
         public string Email { get; set; } = "";
         public string Phone { get; set; } = "";
         public string LinkedInUrl { get; set; } = "";

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { SettingsService } from '../../services/settings.service';
+import { AuthService } from '../../services/auth.service';
 import { AppSettings, McpConfig } from '../../models/models';
 
 @Component({
@@ -25,6 +26,12 @@ export class SettingsComponent implements OnInit {
     providerPriority: ['OpenRouter', 'Groq', 'Ollama', 'RawFallback'],
     theme: 'dark',
     exportDirectory: '',
+    supabaseProjectId: 'skmfankwrdbevfcooyqf',
+    supabaseUrl: 'https://skmfankwrdbevfcooyqf.supabase.co',
+    supabaseAnonKey: '',
+    supabaseConnectionString: '',
+    googleClientId: '',
+    googleClientSecret: '',
     profile: {
       fullName: '',
       email: '',
@@ -60,12 +67,17 @@ export class SettingsComponent implements OnInit {
   // Available priority options
   allProviders = ['OpenRouter', 'Groq', 'Ollama', 'RawFallback'];
 
-  templatesList = signal<any[]>([]);
-  uploadProgress = signal<string | null>(null);
-  uploadError = signal<string | null>(null);
+  coverLetterTemplatesList = signal<any[]>([]);
+  resumeTemplatesList = signal<any[]>([]);
+  
+  coverUploadProgress = signal<string | null>(null);
+  coverUploadError = signal<string | null>(null);
+  resumeUploadProgress = signal<string | null>(null);
+  resumeUploadError = signal<string | null>(null);
 
   constructor(
     private settingsService: SettingsService,
+    public authService: AuthService,
     private route: ActivatedRoute
   ) {}
 
@@ -79,38 +91,81 @@ export class SettingsComponent implements OnInit {
     this.loadTemplatesList();
   }
 
+  getSupabaseCallbackUrl(): string {
+    const projId = (this.settings().supabaseProjectId || '').trim();
+    if (!projId) return 'https://<your-supabase-project-id>.supabase.co/auth/v1/callback';
+    return `https://${projId}.supabase.co/auth/v1/callback`;
+  }
+
+  copyCallbackUrl() {
+    const url = this.getSupabaseCallbackUrl();
+    navigator.clipboard.writeText(url).then(() => {
+      alert('Supabase OAuth Callback URL copied to clipboard!\n\n' + url);
+    });
+  }
+
   loadTemplatesList() {
-    this.settingsService.getTemplates().subscribe({
+    this.settingsService.getTemplates('cover_letter').subscribe({
       next: (list) => {
-        this.templatesList.set(list);
+        this.coverLetterTemplatesList.set(list);
       },
       error: (err) => {
-        console.error('Failed to load templates list:', err);
+        console.error('Failed to load cover letter templates list:', err);
+      }
+    });
+
+    this.settingsService.getTemplates('resume').subscribe({
+      next: (list) => {
+        this.resumeTemplatesList.set(list);
+      },
+      error: (err) => {
+        console.error('Failed to load resume templates list:', err);
       }
     });
   }
 
-  onTemplateFileSelected(event: any) {
+  onTemplateFileSelected(event: any, type: string = 'cover_letter') {
     const file = event.target.files?.[0];
     if (!file) return;
 
     if (file.type !== 'application/pdf' && !file.name.endsWith('.pdf')) {
-      this.uploadError.set('Only PDF files are allowed.');
+      if (type === 'resume') {
+        this.resumeUploadError.set('Only PDF files are allowed.');
+      } else {
+        this.coverUploadError.set('Only PDF files are allowed.');
+      }
       return;
     }
 
-    this.uploadError.set(null);
-    this.uploadProgress.set('Uploading...');
-    this.settingsService.uploadTemplate(file).subscribe({
+    if (type === 'resume') {
+      this.resumeUploadError.set(null);
+      this.resumeUploadProgress.set('Uploading...');
+    } else {
+      this.coverUploadError.set(null);
+      this.coverUploadProgress.set('Uploading...');
+    }
+
+    this.settingsService.uploadTemplate(file, type).subscribe({
       next: () => {
-        this.uploadProgress.set('Upload successful!');
+        if (type === 'resume') {
+          this.resumeUploadProgress.set('Upload successful!');
+          setTimeout(() => this.resumeUploadProgress.set(null), 3000);
+        } else {
+          this.coverUploadProgress.set('Upload successful!');
+          setTimeout(() => this.coverUploadProgress.set(null), 3000);
+        }
         this.loadTemplatesList();
-        setTimeout(() => this.uploadProgress.set(null), 3000);
       },
       error: (err) => {
         console.error('Upload failed:', err);
-        this.uploadError.set(err.error || 'Upload failed.');
-        this.uploadProgress.set(null);
+        const errorMsg = err.error || 'Upload failed.';
+        if (type === 'resume') {
+          this.resumeUploadError.set(errorMsg);
+          this.resumeUploadProgress.set(null);
+        } else {
+          this.coverUploadError.set(errorMsg);
+          this.coverUploadProgress.set(null);
+        }
       }
     });
   }

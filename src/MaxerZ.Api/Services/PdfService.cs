@@ -268,8 +268,12 @@ namespace MaxerZ.Api.Services
 
             // Load profile settings
             var profile = _settings.Get().Profile;
-            var name = string.IsNullOrWhiteSpace(profile.FullName) ? "MAX MUSTERMANN" : profile.FullName.ToUpper();
-            var role = string.IsNullOrWhiteSpace(profile.Role) ? "Software Engineer | C# & .NET | TypeScript & Angular" : profile.Role;
+            var name = !string.IsNullOrWhiteSpace(request.FullName)
+                ? request.FullName.ToUpper()
+                : (!string.IsNullOrWhiteSpace(profile.FullName) ? profile.FullName.ToUpper() : "MAX MUSTERMANN");
+            var role = !string.IsNullOrWhiteSpace(request.TargetRole)
+                ? request.TargetRole
+                : (!string.IsNullOrWhiteSpace(profile.Role) ? profile.Role : "Software Engineer | C# & .NET | TypeScript & Angular");
             var phone = string.IsNullOrWhiteSpace(profile.Phone) ? "+43 123 4567890" : profile.Phone;
             var email = string.IsNullOrWhiteSpace(profile.Email) ? "max.mustermann@muster.com" : profile.Email;
             var linkedin = string.IsNullOrWhiteSpace(profile.LinkedInUrl) ? "linkedin.com/in/muster" : profile.LinkedInUrl;
@@ -388,25 +392,100 @@ namespace MaxerZ.Api.Services
                 currentY += 15; // Spacing after section
             }
 
-            // Draw resume sections
-            var isDe = (request.Language ?? "en").ToLower() == "de";
-            DrawSection(isDe ? "Zusammenfassung" : "Professional Summary", layout.SummaryFormatted);
-            DrawSection(isDe ? "Berufserfahrung" : "Work Experience", layout.ExperienceFormatted);
-            DrawSection(isDe ? "Ausbildung" : "Education", layout.EducationFormatted);
-            DrawSection(isDe ? "Projekte" : "Projects", layout.ProjectsFormatted);
-            DrawSection(isDe ? "Kenntnisse" : "Skills", layout.SkillsFormatted);
-
-            // Custom Footer links
-            if (!string.IsNullOrWhiteSpace(profile.FooterText))
+            void DrawLanguagesSection(string title, List<LanguageItem>? languages)
             {
-                // Wipe bottom footer text zone with a small white rectangle to preserve template margins
-                gfx.DrawRectangle(XBrushes.White, 0, 790, 595, 25);
+                if (languages == null || languages.Count == 0) return;
+                var validLangs = languages.Where(l => !string.IsNullOrWhiteSpace(l.Language)).ToList();
+                if (validLangs.Count == 0) return;
 
+                if (currentY > 720)
+                {
+                    page = document.AddPage();
+                    gfx = XGraphics.FromPdfPage(page);
+                    currentY = 50;
+                }
+
+                gfx.DrawString(title.ToUpper(), fontSectionTitle, brushAccent, 42, currentY);
+                currentY += 14;
+
+                var penDivider = new XPen(XColor.FromArgb(0xEE, 0xEE, 0xEE), 1);
+                gfx.DrawLine(penDivider, 42, currentY - 11, 553, currentY - 11);
+                currentY += 4;
+
+                foreach (var lang in validLangs)
+                {
+                    if (currentY > 740)
+                    {
+                        page = document.AddPage();
+                        gfx = XGraphics.FromPdfPage(page);
+                        currentY = 50;
+                    }
+
+                    gfx.DrawString("•", fontBodyBold, brushPrimary, 42, currentY);
+                    gfx.DrawString(lang.Language, fontBodyBold, brushPrimary, 52, currentY);
+
+                    if (!string.IsNullOrWhiteSpace(lang.Proficiency))
+                    {
+                        var langWidth = gfx.MeasureString(lang.Language, fontBodyBold).Width;
+                        gfx.DrawString($" - {lang.Proficiency}", fontBody, brushSecondary, 52 + langWidth, currentY);
+                    }
+                    currentY += 13.5;
+                }
+
+                currentY += 15;
+            }
+
+            // Draw resume sections in dynamic order requested by user
+            var isDe = (request.Language ?? "en").ToLower() == "de";
+            var defaultOrder = new List<string> { "summary", "experience", "education", "skills", "projects", "languages" };
+            var sectionOrder = (request.SectionOrder != null && request.SectionOrder.Count > 0)
+                ? request.SectionOrder
+                : defaultOrder;
+
+            foreach (var secKey in sectionOrder)
+            {
+                switch (secKey.ToLower())
+                {
+                    case "summary":
+                        DrawSection(isDe ? "Zusammenfassung" : "Professional Summary", layout.SummaryFormatted);
+                        break;
+                    case "experience":
+                        DrawSection(isDe ? "Berufserfahrung" : "Work Experience", layout.ExperienceFormatted);
+                        break;
+                    case "education":
+                        DrawSection(isDe ? "Ausbildung & Zertifikate" : "Education & Certificates", layout.EducationFormatted);
+                        break;
+                    case "skills":
+                        DrawSection(isDe ? "Kenntnisse" : "Key Skills & Competencies", layout.SkillsFormatted);
+                        break;
+                    case "projects":
+                        DrawSection(isDe ? "Projekte & Erfolge" : "Projects & Key Accomplishments", layout.ProjectsFormatted);
+                        break;
+                    case "languages":
+                        DrawLanguagesSection(isDe ? "Sprachkenntnisse" : "Languages & Proficiency", request.Languages);
+                        break;
+                }
+            }
+
+            // Dispose current graphics context before rendering page footers
+            gfx?.Dispose();
+
+            // Custom Footer links on EVERY page
+            var footerTextToDraw = !string.IsNullOrWhiteSpace(profile.FooterText)
+                ? profile.FooterText
+                : $"{phone} | {email}";
+
+            for (int p = 0; p < document.PageCount; p++)
+            {
+                var docPage = document.Pages[p];
+                using var pageGfx = XGraphics.FromPdfPage(docPage);
+
+                pageGfx.DrawRectangle(XBrushes.White, 0, 790, 595, 25);
                 var footerFont = new XFont("Arial", 8, XFontStyle.Regular);
                 var brushFooter = new XSolidBrush(XColor.FromArgb(0x77, 0x77, 0x77));
-                DrawCenteredSegments(gfx, 805, new TextSegment
+                DrawCenteredSegments(pageGfx, 805, new TextSegment
                 {
-                    Text = profile.FooterText,
+                    Text = footerTextToDraw,
                     Font = footerFont,
                     Brush = brushFooter
                 });
@@ -463,6 +542,33 @@ namespace MaxerZ.Api.Services
             return path;
         }
 
+        public (byte[] pdfBytes, int pageCount) MergePdfs(List<byte[]> pdfBytesList)
+        {
+            if (pdfBytesList == null || pdfBytesList.Count == 0)
+            {
+                throw new ArgumentException("No PDF documents provided to merge.");
+            }
+
+            using var outputDocument = new PdfDocument();
+            int totalPages = 0;
+
+            foreach (var pdfBytes in pdfBytesList)
+            {
+                if (pdfBytes == null || pdfBytes.Length == 0) continue;
+                using var stream = new MemoryStream(pdfBytes);
+                using var inputDocument = PdfReader.Open(stream, PdfDocumentOpenMode.Import);
+                for (int i = 0; i < inputDocument.PageCount; i++)
+                {
+                    outputDocument.AddPage(inputDocument.Pages[i]);
+                    totalPages++;
+                }
+            }
+
+            using var outStream = new MemoryStream();
+            outputDocument.Save(outStream);
+            return (outStream.ToArray(), totalPages);
+        }
+
         private string FindTemplatePdfPath(string templateName)
         {
             if (!string.IsNullOrEmpty(templateName))
@@ -478,7 +584,9 @@ namespace MaxerZ.Api.Services
                 }
             }
 
-            var filename = templateName == "template_2" ? "coverletter_template_2.pdf" : "coverletter_template_1.pdf";
+            var filename = (templateName == "template_2" || templateName == "resume_template_2") 
+                ? "coverletter_template_2.pdf" 
+                : "coverletter_template_1.pdf";
             var pathsToTry = new[]
             {
                 Path.Combine(AppContext.BaseDirectory, "..", "Resources", "Templates", filename),

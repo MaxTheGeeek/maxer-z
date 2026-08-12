@@ -1,93 +1,92 @@
-<div class="app-container" [class.sidebar-collapsed]="isSidebarCollapsed()">
-  <!-- Sidebar Navigation -->
-  <aside class="sidebar">
-    <div class="sidebar-header">
-      <button class="toggle-btn" (click)="toggleSidebar()" title="Toggle Sidebar">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="icon">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-        </svg>
-      </button>
-      <div class="brand-logo-container">
+<div class="app-shell">
+  <!-- Top Navigation Header Bar (Stitch Web UX Layout) -->
+  <header class="app-navbar">
+    <div class="navbar-left">
+      <a routerLink="/home" class="brand-logo-link">
         <img class="brand-logo dark-logo-only" src="logos/MaxerZ-logo-dark.png" alt="MaxerZ" />
         <img class="brand-logo light-logo-only" src="logos/MaxerZ-logo-light.png" alt="MaxerZ" />
-      </div>
+      </a>
     </div>
 
-    <nav class="sidebar-menu">
-      <a routerLink="/home" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="menu-item" title="Home">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="icon">
+    <nav class="navbar-links">
+      <a routerLink="/home" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="nav-icon">
           <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
         </svg>
-        <span class="menu-text">Home</span>
+        <span>Home</span>
       </a>
 
-      <a routerLink="/compose" routerLinkActive="active" class="menu-item" title="Compose">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="icon">
+      <a routerLink="/compose" routerLinkActive="active" class="nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="nav-icon">
           <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
         </svg>
-        <span class="menu-text">Compose</span>
+        <span>Cover Letter</span>
       </a>
 
-      <a routerLink="/history" routerLinkActive="active" class="menu-item" title="History">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="icon">
+      <a routerLink="/resume" routerLinkActive="active" class="nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="nav-icon">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9z" />
+        </svg>
+        <span>Resume</span>
+      </a>
+
+      <a routerLink="/ats" routerLinkActive="active" class="nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="nav-icon">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span>ATS Score</span>
+      </a>
+
+      <a routerLink="/merge" routerLinkActive="active" class="nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="nav-icon">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m0 0l6-6m-6 6l-6-6" />
+        </svg>
+        <span>PDF Merger</span>
+      </a>
+
+      <a (click)="navigateToProtected('/history')" routerLinkActive="active" class="nav-item clickable" title="Requires Login">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="nav-icon">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
         </svg>
-        <span class="menu-text">History</span>
+        <span>History</span>
       </a>
+    </nav>
 
-      <div class="menu-divider"></div>
-
-      <button (click)="navigateToSettings('api')" class="menu-item" title="API Keys">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="icon">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z" />
-        </svg>
-        <span class="menu-text">API Keys</span>
-      </button>
-
-      <button (click)="navigateToSettings('profile')" class="menu-item" title="Profile">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="icon">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-        </svg>
-        <span class="menu-text">Profile</span>
-      </button>
-
-      <button (click)="navigateToSettings('mcp')" class="menu-item" title="MCP">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="icon">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M5.636 5.636l3.536 3.536m0 5.656l-3.536 3.536M9.172 9.172a4 4 0 115.656 5.656 4 4 0 01-5.656-5.656z" />
-        </svg>
-        <span class="menu-text">MCP</span>
-      </button>
-
-      <button (click)="navigateToSettings('templates')" class="menu-item" title="Templates">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="icon">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-        </svg>
-        <span class="menu-text">Templates</span>
-      </button>
-
-      <button (click)="navigateToSettings('app')" class="menu-item" title="Settings">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="icon">
+    <div class="navbar-right">
+      <button (click)="navigateToSettings('api')" class="settings-btn" title="Settings & API Keys">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="nav-icon">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.43l-1.003.828c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.43l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.645-.869L9.594 3.94Z" />
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
         </svg>
-        <span class="menu-text">Settings</span>
+        <span>API Keys</span>
       </button>
-    </nav>
 
-    <!-- Sidebar Footer -->
-    <div class="sidebar-footer">
-      <div class="avatar">
-        {{ userName().substring(0, 1).toUpperCase() }}
-      </div>
-      <div class="user-details">
-        <span class="user-name">{{ userName() }}</span>
-        <span class="user-status">Online</span>
-      </div>
+      @if (authService.isLoggedIn()) {
+        <div class="user-profile-badge" title="User Profile">
+          <div class="avatar">
+            {{ getUserDisplayName().substring(0, 1).toUpperCase() }}
+          </div>
+          <span class="user-name-text">{{ getUserDisplayName() }}</span>
+          <button (click)="logout()" class="logout-btn" title="Sign Out">Logout</button>
+        </div>
+      } @else {
+        <button (click)="openAuthModal()" class="auth-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="nav-icon">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+          </svg>
+          <span>Sign In / Register</span>
+        </button>
+      }
     </div>
-  </aside>
+  </header>
 
-  <!-- Main View Area -->
+  <!-- Main Application Content Area -->
   <main class="main-content">
     <router-outlet></router-outlet>
   </main>
+
+  <!-- Auth Modal -->
+  @if (showAuthModal()) {
+    <app-auth-modal (closeModal)="closeAuthModal()"></app-auth-modal>
+  }
 </div>

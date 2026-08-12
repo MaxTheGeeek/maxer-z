@@ -1,0 +1,66 @@
+<div class="modal-backdrop" (click)="onBackdropClick($event)">
+  <div class="modal-card card">
+    <button class="close-btn" (click)="closeModal.emit()" title="Close">×</button>
+
+    <div class="modal-header">
+      <h2 class="modal-title">
+        {{ mode() === 'login' ? 'Sign In to MaxerZ' : 'Create Free Account' }}
+      </h2>
+      <p class="modal-desc">
+        {{ mode() === 'login' 
+            ? 'Sign in to access your saved history, user profile, and custom PDF templates.' 
+            : 'Register your free open-source account to save documents and activity history.' }}
+      </p>
+    </div>
+
+    <div class="modal-tabs">
+      <button type="button" [class.active]="mode() === 'login'" (click)="switchMode('login')">Sign In</button>
+      <button type="button" [class.active]="mode() === 'register'" (click)="switchMode('register')">Register Free Account</button>
+    </div>
+
+    <div class="social-auth-section">
+      <button type="button" class="google-btn" (click)="signInWithGoogle()" [disabled]="isLoading()">
+        <svg class="google-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24s.92 7.54 2.56 10.78l7.97-6.19z"/>
+          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+        </svg>
+        <span>Continue with Google</span>
+      </button>
+
+      <div class="or-divider">
+        <span>OR</span>
+      </div>
+    </div>
+
+    @if (errorMessage()) {
+      <div class="error-alert">
+        {{ errorMessage() }}
+      </div>
+    }
+
+    <form (submit)="submit(); $event.preventDefault();" class="auth-form">
+      @if (mode() === 'register') {
+        <div class="form-group">
+          <label for="auth-fullname">Full Name</label>
+          <input type="text" id="auth-fullname" [(ngModel)]="fullName" name="fullName" placeholder="e.g. Alex Vance" />
+        </div>
+      }
+
+      <div class="form-group">
+        <label for="auth-email">Email Address *</label>
+        <input type="email" id="auth-email" [(ngModel)]="email" name="email" placeholder="name@example.com" required />
+      </div>
+
+      <div class="form-group">
+        <label for="auth-password">Password *</label>
+        <input type="password" id="auth-password" [(ngModel)]="password" name="password" placeholder="••••••••" required />
+      </div>
+
+      <button type="submit" class="btn-primary auth-submit-btn" [disabled]="isLoading()">
+        <span>{{ mode() === 'login' ? 'Sign In' : 'Create Free Account' }}</span>
+      </button>
+    </form>
+  </div>
+</div>

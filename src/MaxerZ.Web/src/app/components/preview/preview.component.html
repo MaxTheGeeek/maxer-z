@@ -7,14 +7,16 @@
         </svg>
       </button>
       <div>
-        <h1 class="page-title">Review & Tweak Cover Letter</h1>
+        <h1 class="page-title">
+          Review & Tweak {{ docType() === 'resume' ? 'Resume / CV' : 'Cover Letter' }}
+        </h1>
         <p class="page-desc">Tweak the generated text fields on the left. The PDF preview on the right will update when you export or save.</p>
       </div>
     </div>
   </header>
 
   <!-- Fallback Warn Alert -->
-  @if (result()?.wasFallback) {
+  @if (result()?.wasFallback || resumeRes()?.wasFallback) {
     <div class="warning-banner">
       <svg class="warn-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -28,39 +30,70 @@
   <div class="preview-grid">
     <!-- Left Panel: Text Editor & Details -->
     <div class="card editor-panel">
-      <h2 class="card-title">Document Content Editor</h2>
+      <h2 class="card-title">{{ docType() === 'resume' ? 'Resume Section Editor' : 'Document Content Editor' }}</h2>
 
-      <div class="form-group">
-        <label for="salutation">Salutation Line</label>
-        <input type="text" id="salutation" [(ngModel)]="salutationLine" />
-      </div>
-
-      <div class="form-group flex-fill">
-        <label for="body-paragraphs">Body Paragraphs (Separate paragraphs with double newlines)</label>
-        <textarea id="body-paragraphs" [(ngModel)]="bodyParagraphsText" class="editor-textarea"></textarea>
-      </div>
-
-      <div class="form-row">
+      @if (docType() === 'cover_letter') {
         <div class="form-group">
-          <label for="closing">Closing Line</label>
-          <input type="text" id="closing" [(ngModel)]="closingLine" />
+          <label for="salutation">Salutation Line</label>
+          <input type="text" id="salutation" [(ngModel)]="salutationLine" />
         </div>
+
+        <div class="form-group flex-fill">
+          <label for="body-paragraphs">Body Paragraphs (Separate paragraphs with double newlines)</label>
+          <textarea id="body-paragraphs" [(ngModel)]="bodyParagraphsText" class="editor-textarea"></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="closing">Closing Line</label>
+            <input type="text" id="closing" [(ngModel)]="closingLine" />
+          </div>
+          <div class="form-group">
+            <label for="signer">Signer Name</label>
+            <input type="text" id="signer" [(ngModel)]="signerName" />
+          </div>
+        </div>
+      }
+
+      @if (docType() === 'resume') {
         <div class="form-group">
-          <label for="signer">Signer Name</label>
-          <input type="text" id="signer" [(ngModel)]="signerName" />
+          <label for="summary-text">Professional Summary</label>
+          <textarea id="summary-text" [(ngModel)]="summaryText" class="editor-textarea" style="min-height: 80px;"></textarea>
         </div>
-      </div>
+
+        <div class="form-group">
+          <label for="exp-text">Work Experience</label>
+          <textarea id="exp-text" [(ngModel)]="experienceText" class="editor-textarea" style="min-height: 110px;"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="edu-text">Education & Certificates</label>
+          <textarea id="edu-text" [(ngModel)]="educationText" class="editor-textarea" style="min-height: 80px;"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="skills-text">Key Skills</label>
+          <textarea id="skills-text" [(ngModel)]="skillsText" class="editor-textarea" style="min-height: 80px;"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="projects-text">Projects & Highlights</label>
+          <textarea id="projects-text" [(ngModel)]="projectsText" class="editor-textarea" style="min-height: 80px;"></textarea>
+        </div>
+      }
 
       <!-- Orchestration Metadata Telemetry -->
       <div class="metadata-footer">
         <div class="meta-item">
           <span class="meta-label">LLM Provider:</span>
-          <span class="meta-value">{{ result()?.wasFallback ? 'Local Fallback' : 'Active Pipeline' }}</span>
+          <span class="meta-value">
+            {{ (docType() === 'resume' ? resumeRes()?.usedProvider : result()?.usedProvider) || 'Active Pipeline' }}
+          </span>
         </div>
         <div class="meta-item">
-          <span class="meta-label">MCP Sync:</span>
-          <span class="meta-value" [class.synced]="result()?.syncedToMcp">
-            {{ result()?.syncedToMcp ? '✓ Synchronized' : 'Disabled / Pending' }}
+          <span class="meta-label">Model:</span>
+          <span class="meta-value">
+            {{ (docType() === 'resume' ? resumeRes()?.usedModel : result()?.usedModel) || 'Default' }}
           </span>
         </div>
       </div>
@@ -78,7 +111,7 @@
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="btn-icon">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <span>Export PDF Letter</span>
+          <span>Export {{ docType() === 'resume' ? 'Resume' : 'Cover Letter' }} PDF</span>
         </button>
       </div>
 
@@ -107,3 +140,4 @@
     </div>
   </div>
 </div>
+

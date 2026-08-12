@@ -44,14 +44,15 @@ export class SettingsService {
       `${this.base}/test-mcp`, {});
   }
 
-  getTemplates() {
-    return this.http.get<any[]>(`${this.base}/templates`);
+  getTemplates(type?: string) {
+    const url = type ? `${this.base}/templates?type=${type}` : `${this.base}/templates`;
+    return this.http.get<any[]>(url);
   }
 
-  uploadTemplate(file: File) {
+  uploadTemplate(file: File, type: string = 'cover_letter') {
     const formData = new FormData();
     formData.append('file', file);
-    return this.http.post<any>(`${this.base}/templates/upload`, formData);
+    return this.http.post<any>(`${this.base}/templates/upload?type=${type}`, formData);
   }
 
   deleteTemplate(id: string) {

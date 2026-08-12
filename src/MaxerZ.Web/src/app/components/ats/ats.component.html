@@ -1,0 +1,253 @@
+<div class="ats-container">
+  <header class="ats-header">
+    <h1 class="page-title">ATS Resume Review & Scoring</h1>
+    <p class="page-desc">AI-powered 7-stage recruiter & QA audit. Evaluates impact, ATS parseability, visual layout, and grammar.</p>
+  </header>
+
+  <div class="ats-grid">
+    <!-- Left Column: Setup & Resume Input -->
+    <div class="card ats-form">
+      <h2 class="card-title">Resume & Target Role Details</h2>
+      <p class="field-help">Specify your target job title and paste or upload your resume text to trigger the audit.</p>
+
+      <div class="form-group">
+        <label for="ats-job-title">Target Job Title * (Required)</label>
+        <input type="text" id="ats-job-title" [(ngModel)]="jobTitle" placeholder="e.g. Senior Software Engineer / Lead Solutions Architect" />
+      </div>
+
+      <div class="form-row" style="margin-top: 15px;">
+        <div class="form-group flex-1">
+          <label for="ats-seniority">Seniority Level *</label>
+          <select id="ats-seniority" [ngModel]="seniorityLevel()" (ngModelChange)="seniorityLevel.set($event)">
+            @for (opt of seniorityOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-group flex-1">
+          <label for="ats-archetype">Role Archetype *</label>
+          <select id="ats-archetype" [ngModel]="targetArchetype()" (ngModelChange)="targetArchetype.set($event)">
+            @for (opt of archetypeOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-top: 15px;">
+        <label for="ats-jd">Target Job Description / Industry Context (Optional)</label>
+        <textarea id="ats-jd" [(ngModel)]="jobDescription" placeholder="Paste target job requirements or keywords to calibrate keyword alignment..." class="prompt-textarea" style="min-height: 80px;"></textarea>
+      </div>
+
+      <div class="form-group" style="margin-top: 15px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+          <label for="ats-resume-text">Resume Text *</label>
+          <label class="file-upload-btn">
+            📁 Load File
+            <input type="file" (change)="onFileUpload($event)" accept=".txt,.md,.pdf,.doc,.docx" style="display: none;" />
+          </label>
+        </div>
+        <textarea id="ats-resume-text" [(ngModel)]="resumeText" placeholder="Paste your full resume text here..." class="prompt-textarea" style="min-height: 200px;"></textarea>
+      </div>
+
+      @if (formError()) {
+        <div class="error-alert" style="margin-top: 15px;">
+          {{ formError() }}
+        </div>
+      }
+
+      <button class="btn-primary analyze-btn" (click)="analyzeResume()" [disabled]="isAnalyzing() || !jobTitle().trim() || !resumeText().trim()" style="margin-top: 20px;">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="btn-icon">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span>Run ATS 7-Stage Audit & Scoring</span>
+      </button>
+    </div>
+
+    <!-- Right Column: Audit Score Report Dashboard -->
+    <div class="card ats-report-panel">
+      <h2 class="card-title">ATS Audit Report</h2>
+
+      @if (atsResult()) {
+        <div class="report-content">
+          <!-- Overall Score Hero Banner -->
+          <div class="score-hero-card" [style.border-color]="getScoreColor(atsResult()!.overallScore)">
+            <div class="score-gauge">
+              <span class="score-num" [style.color]="getScoreColor(atsResult()!.overallScore)">
+                {{ atsResult()!.overallScore }}
+              </span>
+              <span class="score-max">/ 100</span>
+            </div>
+            <div class="score-info">
+              <span class="score-badge" [style.background]="getScoreColor(atsResult()!.overallScore) + '22'" [style.color]="getScoreColor(atsResult()!.overallScore)">
+                {{ getScoreLabel(atsResult()!.overallScore) }}
+              </span>
+              <p class="score-desc">
+                Potential Score with recommendations applied: <strong>{{ atsResult()!.revisedScorePotential }} / 100</strong>
+              </p>
+            </div>
+          </div>
+
+          <!-- 6 Weighted Sub-Scores Progress Grid -->
+          <div class="subscores-section" style="margin-top: 25px;">
+            <h3 class="section-title">Weighted Category Breakdown</h3>
+            <div class="subscores-grid">
+              <div class="subscore-card">
+                <div class="sub-header">
+                  <span>Content & Impact</span>
+                  <span class="sub-val">{{ atsResult()!.subScores.contentRelevance }} / 30</span>
+                </div>
+                <div class="progress-track"><div class="progress-fill" [style.width.%]="(atsResult()!.subScores.contentRelevance / 30) * 100"></div></div>
+              </div>
+
+              <div class="subscore-card">
+                <div class="sub-header">
+                  <span>ATS Parseability</span>
+                  <span class="sub-val">{{ atsResult()!.subScores.atsParseability }} / 20</span>
+                </div>
+                <div class="progress-track"><div class="progress-fill" [style.width.%]="(atsResult()!.subScores.atsParseability / 20) * 100"></div></div>
+              </div>
+
+              <div class="subscore-card">
+                <div class="sub-header">
+                  <span>Layout & Formatting</span>
+                  <span class="sub-val">{{ atsResult()!.subScores.layoutFormatting }} / 15</span>
+                </div>
+                <div class="progress-track"><div class="progress-fill" [style.width.%]="(atsResult()!.subScores.layoutFormatting / 15) * 100"></div></div>
+              </div>
+
+              <div class="subscore-card">
+                <div class="sub-header">
+                  <span>Visual Consistency</span>
+                  <span class="sub-val">{{ atsResult()!.subScores.visualConsistency }} / 15</span>
+                </div>
+                <div class="progress-track"><div class="progress-fill" [style.width.%]="(atsResult()!.subScores.visualConsistency / 15) * 100"></div></div>
+              </div>
+
+              <div class="subscore-card">
+                <div class="sub-header">
+                  <span>Grammar & Language</span>
+                  <span class="sub-val">{{ atsResult()!.subScores.grammarLanguage }} / 15</span>
+                </div>
+                <div class="progress-track"><div class="progress-fill" [style.width.%]="(atsResult()!.subScores.grammarLanguage / 15) * 100"></div></div>
+              </div>
+
+              <div class="subscore-card">
+                <div class="sub-header">
+                  <span>Completeness</span>
+                  <span class="sub-val">{{ atsResult()!.subScores.completeness }} / 5</span>
+                </div>
+                <div class="progress-track"><div class="progress-fill" [style.width.%]="(atsResult()!.subScores.completeness / 5) * 100"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ATS Risks Section -->
+          @if (atsResult()!.atsRisks.length > 0) {
+            <div class="risks-section" style="margin-top: 25px;">
+              <h3 class="section-title">ATS Compatibility Flags</h3>
+              <div class="risks-list">
+                @for (risk of atsResult()!.atsRisks; track risk.flagText) {
+                  <div class="risk-item" [class.passed]="risk.passed" [class.failed]="!risk.passed">
+                    <span>{{ risk.flagText }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Section Reviews with Quoted Feedback -->
+          @if (atsResult()!.sectionReviews.length > 0) {
+            <div class="section-reviews" style="margin-top: 25px;">
+              <h3 class="section-title">Section-by-Section Quoted Feedback</h3>
+              @for (sec of atsResult()!.sectionReviews; track sec.sectionName) {
+                <div class="sec-review-card">
+                  <h4>{{ sec.sectionName }}</h4>
+                  @if (sec.strengths.length > 0) {
+                    <div class="feedback-group positive">
+                      <strong>✅ Strengths:</strong>
+                      <ul>
+                        @for (str of sec.strengths; track str) {
+                          <li>{{ str }}</li>
+                        }
+                      </ul>
+                    </div>
+                  }
+                  @if (sec.weaknesses.length > 0) {
+                    <div class="feedback-group negative">
+                      <strong>⚠️ Areas for Improvement:</strong>
+                      <ul>
+                        @for (wk of sec.weaknesses; track wk) {
+                          <li>{{ wk }}</li>
+                        }
+                      </ul>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+
+          <!-- Actionable Recommendations & Rewrites -->
+          @if (atsResult()!.recommendations.length > 0) {
+            <div class="recommendations-section" style="margin-top: 25px;">
+              <h3 class="section-title">Prioritized High-Impact Fixes</h3>
+              <div class="recs-list">
+                @for (rec of atsResult()!.recommendations; track rec.priority) {
+                  <div class="rec-card">
+                    <div class="rec-header">
+                      <span class="rec-prio">#{{ rec.priority }}</span>
+                      <span class="rec-title">{{ rec.itemToChange }}</span>
+                    </div>
+                    <p class="rec-why"><strong>Why it matters:</strong> {{ rec.whyItMatters }}</p>
+                    @if (rec.exampleFix) {
+                      <div class="rec-fix-box">
+                        <strong>Concrete Fix Model:</strong>
+                        <p>{{ rec.exampleFix }}</p>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="empty-report-placeholder">
+          <svg class="ats-placeholder-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <h3>No Audit Results Yet</h3>
+          <p>Provide your target job title and resume text on the left, then click "Run ATS 7-Stage Audit & Scoring" to generate your detailed recruiter report.</p>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Loading Console Overlay -->
+  @if (isAnalyzing()) {
+    <div class="console-overlay">
+      <div class="console-box card">
+        <div class="console-header">
+          <div class="console-dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+          </div>
+          <span class="console-title">MaxerZ AI ATS Engine — Executing 7-Stage Recruiter Audit</span>
+        </div>
+        <div class="console-body">
+          @for (log of progressLogs(); track log) {
+            <div class="console-line" [class.error-line]="log.startsWith('✗')" [class.success-line]="log.startsWith('✓')">
+              <span class="console-prompt">></span> {{ log }}
+            </div>
+          }
+          <div class="console-spinner-row">
+            <div class="spinner"></div>
+            <span>Evaluating resume against {{ jobTitle() }} standards... Please wait.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

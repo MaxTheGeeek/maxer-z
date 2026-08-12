@@ -21,6 +21,12 @@ export interface AppSettings {
   providerPriority: string[];
   theme: string;
   exportDirectory: string;
+  supabaseProjectId?: string;
+  supabaseUrl?: string;
+  supabaseAnonKey?: string;
+  supabaseConnectionString?: string;
+  googleClientId?: string;
+  googleClientSecret?: string;
   profile: UserProfile;
 }
 
@@ -81,15 +87,26 @@ export interface LlmResult {
   wasFallback: boolean;
   warnings: string[];
   attemptLog: string[];
+  usedProvider?: string;
+  usedModel?: string;
   syncedToMcp: boolean;
 }
 
+export interface LanguageItem {
+  language: string;
+  proficiency: string;
+}
+
 export interface ResumeRequest {
+  fullName?: string;
+  targetRole?: string;
   summary: string;
   experience: string;
   education: string;
   skills: string;
   projects: string;
+  languages?: LanguageItem[];
+  sectionOrder?: string[];
   language: string;
   selectedTemplate: string;
   headerAddress: string;
@@ -127,5 +144,60 @@ export interface ResumeRecord {
   createdAt: string;
   usedProvider: string;
   usedModel: string;
+}
+
+export interface AtsRequest {
+  resumeText: string;
+  jobTitle: string;
+  jobDescription?: string;
+  seniorityLevel?: string;
+  targetArchetype?: string;
+}
+
+export interface AtsSubScores {
+  contentRelevance: number;
+  atsParseability: number;
+  layoutFormatting: number;
+  visualConsistency: number;
+  grammarLanguage: number;
+  completeness: number;
+}
+
+export interface AtsSectionReview {
+  sectionName: string;
+  strengths: string[];
+  weaknesses: string[];
+}
+
+export interface AtsDesignFinding {
+  location: string;
+  finding: string;
+  severity: 'high' | 'medium' | 'low';
+}
+
+export interface AtsRiskItem {
+  passed: boolean;
+  flagText: string;
+}
+
+export interface AtsRecommendation {
+  priority: number;
+  itemToChange: string;
+  whyItMatters: string;
+  exampleFix: string;
+}
+
+export interface AtsResult {
+  overallScore: number;
+  subScores: AtsSubScores;
+  sectionReviews: AtsSectionReview[];
+  designLayoutReview: AtsDesignFinding[];
+  atsRisks: AtsRiskItem[];
+  recommendations: AtsRecommendation[];
+  revisedScorePotential: number;
+  wasFallback: boolean;
+  attemptLog: string[];
+  usedProvider?: string;
+  usedModel?: string;
 }
 
